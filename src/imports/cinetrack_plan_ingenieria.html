@@ -1,0 +1,163 @@
+
+<h2 class="sr-only">Plan de ingeniería CineTrack: app de watchlist personal con búsqueda IA, filtros, estadísticas y diseño responsive</h2>
+<style>
+.grd2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.grd3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem}
+.lbl{font-size:11px;font-weight:500;letter-spacing:.06em;color:var(--color-text-secondary);margin:0 0 10px}
+.row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;color:var(--color-text-primary)}
+.row:last-child{border-bottom:none}
+</style>
+
+<div style="display:flex;align-items:center;gap:14px;padding:.5rem 0 1.5rem">
+  <div style="width:50px;height:50px;background:#7C3AED;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <i class="ti ti-movie" style="font-size:26px;color:white" aria-hidden="true"></i>
+  </div>
+  <div style="flex:1">
+    <div style="font-size:22px;font-weight:500;letter-spacing:-.4px;color:var(--color-text-primary)">CineTrack</div>
+    <div style="font-size:13px;color:var(--color-text-secondary);margin-top:2px">Watchlist personal de películas · Plan técnico v1.0</div>
+  </div>
+  <div style="border:0.5px solid #7C3AED;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;color:#7C3AED;flex-shrink:0">3 fases · ~6h dev</div>
+</div>
+
+<div class="grd3" style="margin-bottom:12px">
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center">
+    <div style="font-size:24px;font-weight:500;color:#7C3AED">18+</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Funciones</div>
+  </div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center">
+    <div style="font-size:24px;font-weight:500;color:#F97316">5</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Módulos</div>
+  </div>
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;text-align:center">
+    <div style="font-size:24px;font-weight:500;color:#10B981">1</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:2px">Archivo HTML</div>
+  </div>
+</div>
+
+<div class="grd2" style="margin-bottom:12px">
+  <div class="card">
+    <p class="lbl"><i class="ti ti-stack" aria-hidden="true"></i>  Stack técnico</p>
+    <div class="row"><i class="ti ti-code" style="font-size:16px;color:#F97316" aria-hidden="true"></i> Vanilla JS + HTML + CSS</div>
+    <div class="row"><i class="ti ti-cloud" style="font-size:16px;color:#7C3AED" aria-hidden="true"></i> Claude API · búsqueda IA de películas</div>
+    <div class="row"><i class="ti ti-database" style="font-size:16px;color:#06B6D4" aria-hidden="true"></i> localStorage · persistencia automática</div>
+    <div class="row"><i class="ti ti-diamond" style="font-size:16px;color:#EF4444" aria-hidden="true"></i> Lucide Icons · CDN</div>
+    <div class="row"><i class="ti ti-eye" style="font-size:16px;color:var(--color-text-secondary)" aria-hidden="true"></i> Plus Jakarta Sans · Google Fonts</div>
+  </div>
+  <div class="card">
+    <p class="lbl"><i class="ti ti-list-check" aria-hidden="true"></i>  Funciones principales</p>
+    <div class="row"><i class="ti ti-search" style="font-size:15px;color:#7C3AED" aria-hidden="true"></i> Búsqueda y autocompletado con IA</div>
+    <div class="row"><i class="ti ti-star" style="font-size:15px;color:#F59E0B" aria-hidden="true"></i> Calificación de 1 a 5 estrellas</div>
+    <div class="row"><i class="ti ti-tag" style="font-size:15px;color:#F97316" aria-hidden="true"></i> Géneros, plataformas y etiquetas</div>
+    <div class="row"><i class="ti ti-chart-bar" style="font-size:15px;color:#06B6D4" aria-hidden="true"></i> Dashboard de estadísticas</div>
+    <div class="row"><i class="ti ti-dice" style="font-size:15px;color:#EF4444" aria-hidden="true"></i> Selector aleatorio "¿Qué veo hoy?"</div>
+    <div class="row"><i class="ti ti-note" style="font-size:15px;color:#8B5CF6" aria-hidden="true"></i> Notas personales por película</div>
+  </div>
+</div>
+
+<div class="grd2" style="margin-bottom:12px">
+  <div class="card">
+    <p class="lbl"><i class="ti ti-palette" aria-hidden="true"></i>  Paleta · white + vivid</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="text-align:center">
+        <div style="width:34px;height:34px;background:#fff;border:1px solid #E5E7EB;border-radius:8px;margin:0 auto 4px"></div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">Base</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:34px;height:34px;background:#7C3AED;border-radius:8px;margin:0 auto 4px"></div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">Primary</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:34px;height:34px;background:#F97316;border-radius:8px;margin:0 auto 4px"></div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">Accent</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:34px;height:34px;background:#06B6D4;border-radius:8px;margin:0 auto 4px"></div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">Viendo</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:34px;height:34px;background:#10B981;border-radius:8px;margin:0 auto 4px"></div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">Visto</div>
+      </div>
+      <div style="text-align:center">
+        <div style="width:34px;height:34px;background:#EF4444;border-radius:8px;margin:0 auto 4px"></div>
+        <div style="font-size:11px;color:var(--color-text-secondary)">Urgente</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap">
+      <span style="font-size:11px;border:0.5px solid var(--color-border-secondary);border-radius:20px;padding:2px 8px;color:var(--color-text-secondary)">Mobile first</span>
+      <span style="font-size:11px;border:0.5px solid var(--color-border-secondary);border-radius:20px;padding:2px 8px;color:var(--color-text-secondary)">CSS custom properties</span>
+      <span style="font-size:11px;border:0.5px solid var(--color-border-secondary);border-radius:20px;padding:2px 8px;color:var(--color-text-secondary)">Minimalista</span>
+    </div>
+  </div>
+  <div class="card">
+    <p class="lbl"><i class="ti ti-layout-grid" aria-hidden="true"></i>  Módulos de la aplicación</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;background:#7C3AED;border-radius:50%;flex-shrink:0"></div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Lista principal</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);margin-left:auto">Pendiente / Viendo / Visto</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;background:#F97316;border-radius:50%;flex-shrink:0"></div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Buscador IA</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);margin-left:auto">Claude API</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;background:#06B6D4;border-radius:50%;flex-shrink:0"></div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Estadísticas</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);margin-left:auto">Dashboard visual</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;background:#EF4444;border-radius:50%;flex-shrink:0"></div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Filtros y búsqueda</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);margin-left:auto">Género, plataforma, año</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:8px;height:8px;background:#10B981;border-radius:50%;flex-shrink:0"></div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Selector aleatorio</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);margin-left:auto">¿Qué veo hoy?</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <p class="lbl"><i class="ti ti-timeline" aria-hidden="true"></i>  Fases de desarrollo</p>
+  <div class="grd3">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:22px;height:22px;background:#7C3AED;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:500;flex-shrink:0">1</div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Base</span>
+        <span style="font-size:11px;color:var(--color-text-secondary);margin-left:auto">~2h</span>
+      </div>
+      <div style="height:3px;background:#7C3AED;border-radius:2px;margin-bottom:8px"></div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Layout · cards · CRUD · localStorage · 3 estados de lista</div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:22px;height:22px;background:#F97316;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:500;flex-shrink:0">2</div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Enriquecimiento</span>
+        <span style="font-size:11px;color:var(--color-text-secondary);margin-left:auto">~2h</span>
+      </div>
+      <div style="height:3px;background:#F97316;border-radius:2px;margin-bottom:8px"></div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Búsqueda IA · filtros · géneros · calificaciones · notas · plataformas</div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:22px;height:22px;background:#10B981;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:500;flex-shrink:0">3</div>
+        <span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">Experiencia</span>
+        <span style="font-size:11px;color:var(--color-text-secondary);margin-left:auto">~2h</span>
+      </div>
+      <div style="height:3px;background:#10B981;border-radius:2px;margin-bottom:8px"></div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.6">Dashboard · selector aleatorio · import/export · responsive · animaciones</div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center">
+  <button onclick="sendPrompt('El plan es perfecto. Construye CineTrack ahora: un solo archivo HTML completo con todas las fases, Claude API integrada para búsqueda, localStorage, diseño white+vivid con Plus Jakarta Sans y Lucide Icons, responsive para móvil y escritorio, y todas las funciones del plan.')" style="background:#7C3AED;color:white;border:none;padding:11px 32px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px">
+    <i class="ti ti-rocket" style="font-size:16px" aria-hidden="true"></i>
+    Construir la aplicación ahora ↗
+  </button>
+</div>
