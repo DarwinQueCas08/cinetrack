@@ -113,14 +113,10 @@ export default function App() {
       let shouldSaveInitial = false;
 
       if (meta && meta.data) {
-        let updatedHistory = false;
         for (const k in meta.data) {
-          if (localStorage.getItem(k) !== meta.data[k]) {
-            localStorage.setItem(k, meta.data[k]);
-            if (k === ROOMS_HISTORY_KEY) updatedHistory = true;
-          }
+          localStorage.setItem(k, meta.data[k]);
         }
-        if (updatedHistory) {
+        if (meta.data[ROOMS_HISTORY_KEY]) {
           try { setRoomsHistory(JSON.parse(meta.data[ROOMS_HISTORY_KEY])); } catch {}
         }
       } else {
