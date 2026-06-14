@@ -337,12 +337,12 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
         </div>
 
         {/* Room code */}
-        <div className="flex items-center gap-2 p-2.5 rounded-xl mb-3" style={{ background: '#F5F3FF' }}>
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 rounded-xl mb-3" style={{ background: '#F5F3FF' }}>
+          <div className="flex-1 w-full">
             <p style={{ fontSize: '10px', fontWeight: 600, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Código de sala</p>
             <p style={{ fontSize: '20px', fontWeight: 800, color: '#5B21B6', letterSpacing: '0.15em', fontFamily: 'monospace' }}>{roomId}</p>
           </div>
-          <button onClick={copyCode} className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all"
+          <button onClick={copyCode} className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl transition-all flex-shrink-0"
             style={{ fontSize: '12px', fontWeight: 600, background: copied ? '#10B981' : '#7C3AED', color: 'white' }}>
             {copied ? <Check size={13} /> : <Copy size={13} />}
             {copied ? '¡Copiado!' : 'Copiar'}

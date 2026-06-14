@@ -474,7 +474,7 @@ export default function App() {
     <div style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", minHeight: '100vh', background: '#F8F7FF' }}>
       {/* Top nav */}
       <header className="sticky top-0 z-30 bg-white border-b border-gray-100" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.04)' }}>
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
           {/* Logo */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#7C3AED' }}>
@@ -484,7 +484,7 @@ export default function App() {
           </div>
 
           {/* Actions — icon-only for secondary, label only for primary */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {/* ¿Qué veo? — icon only */}
             <button
               onClick={() => setShowRandom(true)}
@@ -504,29 +504,29 @@ export default function App() {
               <Share2 size={14} />
             </button>
             {/* Export / Import */}
-            <button onClick={exportData} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Exportar JSON">
+            <button onClick={exportData} className="hidden sm:flex p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Exportar JSON">
               <Download size={14} />
             </button>
-            <button onClick={importData} className="p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Importar JSON">
+            <button onClick={importData} className="hidden sm:flex p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Importar JSON">
               <Upload size={14} />
             </button>
 
             {/* + Agregar — primary, always visible */}
             <button
               onClick={() => setTab('search')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white transition-colors ml-0.5"
+              className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-white transition-colors ml-0.5"
               style={{ fontSize: '12px', fontWeight: 600, background: '#7C3AED' }}
             >
               <Plus size={14} />
-              Agregar
+              <span className="hidden sm:inline">Agregar</span>
             </button>
 
             {/* User — avatar + name + logout */}
-            <div className="flex items-center gap-1 ml-1 pl-2 border-l border-gray-100">
+            <div className="flex items-center gap-1 ml-1 pl-1 sm:pl-2 border-l border-gray-100">
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F5F3FF' }}>
                 <User size={12} style={{ color: '#7C3AED' }} />
               </div>
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#374151', maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span className="hidden sm:block" style={{ fontSize: '11px', fontWeight: 600, color: '#374151', maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {session.username}
               </span>
               <button
@@ -545,7 +545,7 @@ export default function App() {
       {/* Tab bar — minimal pill switcher */}
       <div className="sticky top-14 z-20" style={{ background: 'rgba(248,247,255,0.85)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
         <div className="max-w-2xl mx-auto px-4 py-2">
-          <div className="flex gap-1 p-1 rounded-2xl w-fit mx-auto" style={{ background: 'rgba(0,0,0,0.04)' }}>
+          <div className="flex gap-1 p-1 rounded-2xl w-fit mx-auto overflow-x-auto max-w-full hide-scrollbar" style={{ background: 'rgba(0,0,0,0.04)' }}>
             {([
               { key: 'list' as Tab, icon: <Film size={13} />, label: 'Lista', badge: counts.all },
               { key: 'search' as Tab, icon: <Search size={13} />, label: 'Buscar', badge: null },
@@ -735,10 +735,10 @@ export default function App() {
                               <Users size={16} style={{ color: '#7C3AED' }} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }} className="truncate">{r.name}</p>
-                                <span style={{ fontSize: '10px', fontWeight: 600, background: '#FFF7ED', color: '#EA580C', padding: '1px 6px', borderRadius: '20px' }}>👑 Propietario</span>
-                              </div>
+                                <div className="flex items-center gap-2">
+                                  <p style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }} className="truncate">{r.name}</p>
+                                  <span style={{ fontSize: '10px', fontWeight: 600, background: '#FFF7ED', color: '#EA580C', padding: '1px 6px', borderRadius: '20px', flexShrink: 0 }}>👑 Propietario</span>
+                                </div>
                               <p style={{ fontSize: '11px', color: '#9CA3AF' }}>Código: {r.roomId} · {new Date(r.joinedAt).toLocaleDateString('es')}</p>
                             </div>
                             <span style={{ fontSize: '11px', color: '#7C3AED', fontWeight: 500 }}>Entrar →</span>
