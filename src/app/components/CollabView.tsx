@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { RefreshCw, Copy, Check, LogOut, Search, Trash2, Users, Crown, Wifi, WifiOff, X, Star, Plus, Key, ExternalLink, Loader2, Film, Tv, Shuffle } from 'lucide-react';
+import { RefreshCw, Copy, Check, LogOut, Search, Trash2, Users, Crown, Wifi, WifiOff, X, Star, Plus, Key, ExternalLink, Loader2, Film, Tv, Shuffle, Heart } from 'lucide-react';
 import { Movie, MovieStatus, ContentType, TMDBMovie, TMDBSeries, TMDB_GENRES, SERIES_STATUS_MAP } from '../types';
 import { MovieCard } from './MovieCard';
 import { MovieModal } from './MovieModal';
 import { MovieDetailModal } from './MovieDetailModal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { RandomPicker } from './RandomPicker';
+import { MatchGame } from './MatchGame';
+import { HeroBanner } from './HeroBanner';
+import { Avatar } from './Avatar';
+import { motion, AnimatePresence } from 'motion/react';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 
 const SERVER = `https://${projectId}.supabase.co/functions/v1/make-server-da14cc3d`;
@@ -65,6 +69,7 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
   const [detailMovie, setDetailMovie] = useState<Movie | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [showRandom, setShowRandom] = useState(false);
+  const [showMatchGame, setShowMatchGame] = useState(false);
   const [filterStatus, setFilterStatus] = useState<MovieStatus | 'all'>('all');
   const lastUpdatedRef = useRef<string>('');
   const isOwner = !!ownerKey;
@@ -132,8 +137,21 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
     } finally { setSyncing(false); setLoading(false); }
   }, [roomId, memberName]);
 
-  const pushUpdate = async (movies: Movie[], mName?: string) => {
-    const body: Record<string, unknown> = { movies, memberName: mName ?? memberName };
+  const pushUpdate = async (movies: Movie[], mName?: string, actionMsg?: string) => {
+    let finalMovies = [...movies];
+    if (actionMsg) {
+      let meta = finalMovies.find(m => m.id === '__ROOM_META__');
+      if (!meta) {
+        meta = { id: '__ROOM_META__', type: 'movie', title: 'META', year: null, poster: null, overview: '', genres: [], platform: '', status: 'pending', rating: 0, notes: '', dateAdded: new Date().toISOString(), comments: [] };
+      }
+      const feed = [...(meta.comments || [])];
+      feed.unshift({ id: Date.now().toString(), user: mName ?? memberName, text: actionMsg, date: new Date().toISOString() });
+      if (feed.length > 30) feed.pop();
+      meta = { ...meta, comments: feed };
+      finalMovies = [meta, ...finalMovies.filter(m => m.id !== '__ROOM_META__')];
+    }
+
+    const body: Record<string, unknown> = { movies: finalMovies, memberName: mName ?? memberName };
     if (ownerKey) body.ownerKey = ownerKey;
     const res = await fetch(`${SERVER}/rooms/${roomId}`, { method: 'PUT', headers: HEADERS, body: JSON.stringify(body) });
     if (!res.ok) throw new Error('Error al sincronizar');
@@ -220,7 +238,7 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
       ...seriesExtras,
     };
     try {
-      await pushUpdate([movie, ...room.movies]);
+      await pushUpdate([movie, ...room.movies], undefined, `agregó ${movie.title}`);
       setSearchQuery('');
       setSearchResults([]);
       setShowSearch(false);
@@ -263,8 +281,9 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
 
   const handleStatusChange = async (id: string, status: MovieStatus) => {
     if (!room) return;
+    const movie = room.movies.find(m => m.id === id);
     const movies = room.movies.map(m => m.id === id ? { ...m, status } : m);
-    try { await pushUpdate(movies); } catch { }
+    try { await pushUpdate(movies, undefined, `marcó ${movie?.title} como ${status}`); } catch { }
   };
 
   const copyCode = async () => {
@@ -273,7 +292,20 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleMatchVote = async (movieId: string, vote: 'yes' | 'no') => {
+    if (!room) return;
+    const movie = room.movies.find(m => m.id === movieId);
+    if (!movie) return;
+    const matchVotes = { ...(movie.matchVotes || {}), [memberName]: vote };
+    const movies = room.movies.map(m => m.id === movieId ? { ...m, matchVotes } : m);
+    try { await pushUpdate(movies); } catch {}
+  };
+
   const roomMovieIds = new Set(room?.movies.map(m => m.tmdbId).filter(Boolean).map(String));
+  
+  const realMovies = room?.movies.filter(m => m.id !== '__ROOM_META__') || [];
+  const roomMeta = room?.movies.find(m => m.id === '__ROOM_META__');
+  const feed = roomMeta?.comments || [];
 
   if (loading) {
     return (
@@ -285,13 +317,13 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
   }
 
   const counts = {
-    all: room?.movies.length || 0,
-    pending: room?.movies.filter(m => m.status === 'pending').length || 0,
-    watching: room?.movies.filter(m => m.status === 'watching').length || 0,
-    watched: room?.movies.filter(m => m.status === 'watched').length || 0,
+    all: realMovies.length,
+    pending: realMovies.filter(m => m.status === 'pending').length,
+    watching: realMovies.filter(m => m.status === 'watching').length,
+    watched: realMovies.filter(m => m.status === 'watched').length,
   };
 
-  const filteredMovies = room?.movies.filter(m => filterStatus === 'all' || m.status === filterStatus) || [];
+  const filteredMovies = realMovies.filter(m => filterStatus === 'all' || m.status === filterStatus);
 
   if (!room && error) {
     return (
@@ -375,9 +407,27 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
         </div>
       )}
 
+      {/* Activity Feed Banner */}
+      {feed.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border p-3 flex items-center gap-3 overflow-hidden shadow-sm dark:border-gray-700" style={{ borderColor: '#E5E7EB' }}>
+          <div className="flex-shrink-0 relative">
+            <div className="absolute -inset-1 rounded-full bg-pink-500 animate-pulse opacity-40 blur-[2px]" />
+            <Avatar name={feed[0].user} size={28} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p style={{ fontSize: '12px' }} className="truncate text-gray-600 dark:text-gray-300">
+              <span style={{ fontWeight: 700 }} className="text-gray-900 dark:text-white">{feed[0].user}</span> {feed[0].text}
+            </p>
+          </div>
+          <span style={{ fontSize: '10px' }} className="text-gray-400 dark:text-gray-500 flex-shrink-0">
+            {new Date(feed[0].date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          </span>
+        </div>
+      )}
+
       {/* Add — TMDB search */}
       {!showSearch ? (
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <button
             onClick={() => setShowSearch(true)}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed transition-colors hover:border-violet-400 hover:bg-violet-50"
@@ -387,14 +437,25 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
             <span style={{ fontSize: '14px', fontWeight: 500 }}>Buscar y agregar</span>
           </button>
           
-          <button
-            onClick={() => setShowRandom(true)}
-            className="flex-shrink-0 w-12 flex items-center justify-center rounded-2xl transition-all hover:scale-105"
-            style={{ background: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA' }}
-            title="Elegir película al azar"
-          >
-            <Shuffle size={18} />
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowMatchGame(true)}
+              className="flex-1 sm:flex-none px-4 py-3 flex items-center justify-center gap-2 rounded-2xl transition-all hover:scale-105"
+              style={{ background: '#FDF2F8', color: '#EC4899', border: '1px solid #FBCFE8' }}
+              title="Minijuego Match"
+            >
+              <Heart size={16} className="fill-pink-500" />
+              <span style={{ fontSize: '13px', fontWeight: 600 }}>Jugar Match</span>
+            </button>
+            <button
+              onClick={() => setShowRandom(true)}
+              className="w-12 sm:w-12 flex-shrink-0 flex items-center justify-center rounded-2xl transition-all hover:scale-105"
+              style={{ background: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA' }}
+              title="Elegir película al azar"
+            >
+              <Shuffle size={18} />
+            </button>
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border p-4 flex flex-col gap-3" style={{ borderColor: '#DDD6FE' }}>
@@ -583,21 +644,54 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
         </div>
       )}
 
-      {/* Movie list */}
-      {room && filteredMovies.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredMovies.map(m => (
-            <MovieCard
-              key={m.id}
-              movie={m}
-              onEdit={setEditingMovie}
-              onDelete={isOwner ? handleDeleteMovie : () => {}}
-              onStatusChange={handleStatusChange}
-              onDetail={setDetailMovie}
-              readOnly={false}
-            />
-          ))}
+      {/* Movie List */}
+      {filteredMovies.length === 0 ? (
+        <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-3xl border border-dashed border-gray-200 dark:border-gray-800">
+          <div className="w-16 h-16 rounded-full bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center mx-auto mb-4">
+            <Film size={24} className="text-violet-500" />
+          </div>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#374151' }} className="dark:text-gray-200">
+            Aún no hay películas
+          </h3>
+          <p style={{ fontSize: '14px', color: '#9CA3AF' }} className="mt-1 dark:text-gray-500">
+            Busca una película para agregarla a la sala
+          </p>
         </div>
+      ) : (
+        <>
+          {filterStatus === 'pending' && filteredMovies.length > 0 && (
+            <HeroBanner 
+              movie={filteredMovies[0]} 
+              onStatusChange={handleStatusChange} 
+              onDetail={setDetailMovie} 
+            />
+          )}
+          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <AnimatePresence mode="popLayout">
+              {(filterStatus === 'pending' ? filteredMovies.slice(1) : filteredMovies).map(m => (
+                <motion.div
+                  key={m.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <MovieCard
+                    movie={m}
+                    onEdit={setEditingMovie}
+                    onDelete={isOwner ? handleDeleteMovie : () => {}}
+                    onStatusChange={handleStatusChange}
+                    onDetail={setDetailMovie}
+                    onUpdateMovie={handleEditSave}
+                    currentUser={memberName}
+                    readOnly={false}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        </>
       )}
 
       {/* Edit modal */}
@@ -620,6 +714,8 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
             handleStatusChange(id, status);
             setDetailMovie(prev => prev?.id === id ? { ...prev, status } : prev);
           }}
+          currentUser={memberName}
+          onUpdateMovie={handleEditSave}
           readOnly={!isOwner}
         />
       )}
@@ -638,9 +734,19 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
       {/* Random Picker */}
       {showRandom && room && (
         <RandomPicker 
-          movies={room.movies} 
+          movies={realMovies} 
           onClose={() => setShowRandom(false)} 
           onStatusChange={handleStatusChange} 
+        />
+      )}
+
+      {/* Match Game */}
+      {showMatchGame && room && (
+        <MatchGame
+          movies={realMovies}
+          currentUser={memberName}
+          onVote={handleMatchVote}
+          onClose={() => setShowMatchGame(false)}
         />
       )}
     </div>

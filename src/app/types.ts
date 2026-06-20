@@ -1,6 +1,13 @@
 export type MovieStatus = 'pending' | 'watching' | 'watched';
 export type ContentType = 'movie' | 'series';
 
+export interface MovieComment {
+  id: string;
+  user: string;
+  text: string;
+  date: string;
+}
+
 export interface Movie {
   id: string;
   type: ContentType;           // movie or series
@@ -21,6 +28,13 @@ export interface Movie {
   episodes?: number;
   seriesStatus?: string;       // 'En emisión' | 'Finalizada' | 'Cancelada'
   currentSeason?: number;      // which season they're on
+  
+  // Social Collaboration Fields
+  matchVotes?: Record<string, 'yes' | 'no'>;
+  interestVotes?: string[];
+  userRatings?: Record<string, number>;
+  comments?: MovieComment[];
+  watchingSince?: string;
 }
 
 export interface TMDBMovie {

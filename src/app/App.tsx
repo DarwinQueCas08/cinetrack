@@ -1,6 +1,7 @@
 /* MARKER-MAKE-KIT-INVOKED */
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Film, Search, BarChart2, Shuffle, Plus, Download, Upload, Clapperboard, Share2, ArrowUpDown, Users, LogOut, User } from 'lucide-react';
+import { Film, Search, BarChart2, Shuffle, Plus, Download, Upload, Clapperboard, Share2, ArrowUpDown, Users, LogOut, User, Moon, Sun } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Movie, MovieStatus } from './types';
 import { MovieCard } from './components/MovieCard';
 import { MovieModal } from './components/MovieModal';
@@ -83,6 +84,8 @@ export default function App() {
       return stored ? JSON.parse(stored) : null;
     } catch { return null; }
   });
+
+  const { theme, setTheme } = useTheme();
 
   // Detect shared list (accessible without login)
   const sharedMovies = useMemo(() => {
@@ -485,6 +488,14 @@ export default function App() {
 
           {/* Actions — icon-only for secondary, label only for primary */}
           <div className="flex items-center gap-1 sm:gap-1.5">
+            {/* Theme toggle */}
+            <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded-xl transition-colors hover:bg-gray-100"
+                title="Alternar tema"
+              >
+                {theme === 'dark' ? <Sun size={14} className="text-amber-400" /> : <Moon size={14} className="text-gray-600" />}
+              </button>
             {/* ¿Qué veo? — icon only */}
             <button
               onClick={() => setShowRandom(true)}
@@ -656,7 +667,16 @@ export default function App() {
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {filtered.map(m => (
-                    <MovieCard key={m.id} movie={m} onEdit={setEditingMovie} onDelete={deleteMovie} onStatusChange={changeStatus} onDetail={setDetailMovie} />
+                    <MovieCard 
+                      key={m.id} 
+                      movie={m} 
+                      onEdit={setEditingMovie} 
+                      onDelete={deleteMovie} 
+                      onStatusChange={changeStatus} 
+                      onDetail={setDetailMovie} 
+                      onUpdateMovie={addMovie}
+                      currentUser={session.username}
+                    />
                   ))}
                 </div>
                 <p style={{ fontSize: '11px', color: '#D1D5DB', textAlign: 'center', paddingTop: '8px' }}>
@@ -807,6 +827,8 @@ export default function App() {
             changeStatus(id, status);
             setDetailMovie(prev => prev?.id === id ? { ...prev, status } : prev);
           }}
+          currentUser={session.username}
+          onUpdateMovie={addMovie}
         />
       )}
     </div>
