@@ -74,7 +74,7 @@ export function SharedListView({ movies, onImport }: SharedListViewProps) {
         </div>
 
         {/* Movie list (read-only) */}
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {movies.map(m => (
             <MovieCard
               key={m.id}

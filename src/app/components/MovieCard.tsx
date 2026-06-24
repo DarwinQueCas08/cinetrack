@@ -78,6 +78,8 @@ export function MovieCard({ movie, onEdit, onDelete, onStatusChange, onDetail, o
   const isMatch = yesVotes >= 2;
   const isWatchingNow = movie.status === 'watching' && movie.watchingSince && new Date(movie.watchingSince).getTime() > Date.now() - 1000 * 60 * 60 * 3; // within 3 hours
 
+  const hasVotedInterest = currentUser && movie.interestVotes?.includes(currentUser);
+
   return (
     <div
       className={`group bg-white dark:bg-gray-900 rounded-2xl border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer h-full flex flex-col relative ${isMatch ? 'ring-2 ring-pink-400' : isWatchingNow ? 'ring-2 ring-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.4)]' : 'border-gray-100 dark:border-gray-800'}`}
@@ -86,235 +88,179 @@ export function MovieCard({ movie, onEdit, onDelete, onStatusChange, onDetail, o
       onClick={() => onDetail?.(movie)}
     >
       {countdown !== null && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
           <span className="text-white font-bold animate-ping" style={{ fontSize: countdown === 0 ? '48px' : '72px' }}>
             {countdown === 0 ? '▶️ PLAY' : countdown}
           </span>
         </div>
       )}
-      <div className="flex gap-0 flex-1">
-        {/* Poster */}
-        <div className="relative flex-shrink-0 w-24 sm:w-28 bg-gray-50" style={{ minHeight: '160px' }}>
-          {movie.poster ? (
-            <img
-              src={movie.poster}
-              alt={movie.title}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-              <span className="text-3xl">🎬</span>
-            </div>
-          )}
-          {/* Status color stripe */}
-          <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: config.textColor, opacity: 0.7 }} />
-        </div>
 
-        {/* Content */}
-        <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
-          <div>
-            <div className="flex items-start justify-between gap-2 mb-1">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  {movie.type === 'series'
-                    ? <Tv size={11} style={{ color: '#7C3AED', flexShrink: 0 }} />
-                    : <Film size={11} style={{ color: '#F97316', flexShrink: 0 }} />}
-                  <h3 className="leading-tight truncate text-gray-900 dark:text-gray-100" style={{ fontSize: '14px', fontWeight: 700 }}>
-                    {movie.title}
-                  </h3>
-                </div>
-              </div>
-              {!readOnly && (
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button
-                    onClick={e => { e.stopPropagation(); onEdit(movie); }}
-                    className="p-1 rounded-lg transition-colors"
-                    style={{ color: '#9CA3AF' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#7C3AED', e.currentTarget.style.background = '#F5F3FF')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#9CA3AF', e.currentTarget.style.background = 'transparent')}
-                  >
-                    <Edit2 size={13} />
-                  </button>
-                  <button
-                    onClick={e => { e.stopPropagation(); onDelete(movie.id); }}
-                    className="p-1 rounded-lg transition-colors"
-                    style={{ color: '#9CA3AF' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#EF4444', e.currentTarget.style.background = '#FEF2F2')}
-                    onMouseLeave={e => (e.currentTarget.style.color = '#9CA3AF', e.currentTarget.style.background = 'transparent')}
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Meta row */}
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {movie.year && <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{movie.year}</span>}
-              {movie.type === 'series' && movie.seasons && (
-                <span style={{ fontSize: '11px', color: '#7C3AED', fontWeight: 600 }}>{movie.seasons} temp.</span>
-              )}
-              {movie.type === 'series' && movie.seriesStatus && (
-                <span
-                  className="px-1.5 py-0.5 rounded-full"
-                  style={{
-                    fontSize: '10px', fontWeight: 600,
-                    background: movie.seriesStatus === 'En emisión' ? '#ECFDF5' : movie.seriesStatus === 'Finalizada' ? '#F3F4F6' : '#FEF2F2',
-                    color: movie.seriesStatus === 'En emisión' ? '#059669' : movie.seriesStatus === 'Finalizada' ? '#6B7280' : '#EF4444',
-                  }}
-                >
-                  {movie.seriesStatus}
-                </span>
-              )}
-              {movie.platform && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border"
-                  style={{ fontSize: '11px', fontWeight: 500, color: '#EA580C', background: '#FFF7ED', borderColor: '#FED7AA' }}>
-                  <Monitor size={9} />{movie.platform}
-                </span>
-              )}
-            </div>
-
-            {/* Overview preview (always visible, 2 lines) */}
-            {movie.overview && !expanded && (
-              <p style={{ fontSize: '12px', lineHeight: '1.5' }} className="text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
-                {movie.overview}
-              </p>
-            )}
-
-            {/* Genres */}
-            {movie.genres.length > 0 && (
-              <div className="flex gap-1 flex-wrap mb-2">
-                {movie.genres.slice(0, 3).map(g => (
-                  <span key={g} style={{ fontSize: '10px' }} className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                    {g}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Streaming platforms available */}
-            {movie.streamingPlatforms && movie.streamingPlatforms.length > 0 && (
-              <div className="flex gap-1 flex-wrap mb-1">
-                {movie.streamingPlatforms.slice(0, 4).map(p => {
-                  const s = platformStyle(p);
-                  return (
-                    <span
-                      key={p}
-                      style={{ fontSize: '9px', fontWeight: 700, background: s.bg, color: s.color, letterSpacing: '0.02em' }}
-                      className="px-1.5 py-0.5 rounded"
-                    >
-                      {p.replace('Amazon Prime Video', 'Prime').replace('Apple TV Plus', 'Apple TV+').replace('Paramount Plus', 'Paramount+')}
-                    </span>
-                  );
-                })}
-                {movie.streamingPlatforms.length > 4 && (
-                  <span style={{ fontSize: '9px', color: '#9CA3AF' }} className="px-1 py-0.5">
-                    +{movie.streamingPlatforms.length - 4}
-                  </span>
-                )}
-              </div>
-            )}
+      {/* Top: Poster (Vertical layout) */}
+      <div className="relative w-full bg-gray-50 dark:bg-gray-800 flex-shrink-0" style={{ aspectRatio: '2/3' }}>
+        {movie.poster ? (
+          <img
+            src={movie.poster}
+            alt={movie.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-600 gap-2">
+            <Film size={32} className="opacity-20" />
+            <span style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.05em' }} className="uppercase">Sin póster</span>
           </div>
+        )}
 
-          {/* Bottom row */}
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            {/* Stars or Interest */}
-            {movie.status === 'pending' && currentUser ? (
-              <button
-                onClick={handleInterestToggle}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-lg border transition-colors"
-                style={{ 
-                  background: movie.interestVotes?.includes(currentUser) ? '#FEF2F2' : 'transparent',
-                  borderColor: movie.interestVotes?.includes(currentUser) ? '#FECACA' : '#F3F4F6',
-                  color: movie.interestVotes?.includes(currentUser) ? '#EF4444' : '#9CA3AF',
-                  fontSize: '11px', fontWeight: 600
-                }}
-              >
-                🔥 {movie.interestVotes?.length || 0}
-              </button>
-            ) : (
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map(n => {
-                  const userRatings = movie.userRatings || {};
-                  const myRating = currentUser && userRatings[currentUser] ? userRatings[currentUser] : movie.rating;
-                  return (
-                    <button
-                      key={n}
-                      disabled={readOnly || !onUpdateMovie}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (readOnly || !onUpdateMovie) return;
-                        if (currentUser) {
-                          onUpdateMovie({ ...movie, userRatings: { ...userRatings, [currentUser]: n } });
-                        } else {
-                          onUpdateMovie({ ...movie, rating: n });
-                        }
-                      }}
-                      className="transition-transform hover:scale-125 disabled:cursor-default"
-                    >
-                      <Star
-                        size={14}
-                        className={n <= myRating ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200 transition-colors'}
-                      />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              {/* Expand toggle */}
-              {hasDetails && (
-                <button
-                  onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
-                  className="p-1 rounded-lg transition-colors"
-                  style={{ color: '#9CA3AF' }}
-                >
-                  {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-                </button>
-              )}
-
-              {/* Status badge */}
-              {!readOnly ? (
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    const order: MovieStatus[] = ['pending', 'watching', 'watched'];
-                    const next = order[(order.indexOf(movie.status) + 1) % 3];
-                    onStatusChange(movie.id, next);
-                  }}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border cursor-pointer transition-all hover:opacity-80"
-                  style={{ fontSize: '11px', fontWeight: 500, color: config.textColor, background: config.bg, borderColor: config.border }}
-                >
-                  {config.icon}
-                  {config.label}
-                </button>
-              ) : (
-                <span
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border"
-                  style={{ fontSize: '11px', fontWeight: 500, color: config.textColor, background: config.bg, borderColor: config.border }}
-                >
-                  {config.icon}
-                  {config.label}
-                </span>
-              )}
-            </div>
-          </div>
-          
-          {/* Play Sync Button */}
-          {movie.status === 'watching' && currentUser && !readOnly && onUpdateMovie && (
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                onUpdateMovie({ ...movie, watchingSince: new Date(Date.now() + 6000).toISOString() });
-              }}
-              className="mt-2.5 w-full py-1.5 rounded-xl text-white font-bold flex items-center justify-center gap-1 transition-colors"
-              style={{ background: '#06B6D4', fontSize: '12px' }}
+        {/* Floating Badges over Poster */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+          <span
+            className="flex items-center gap-1 px-2 py-1 rounded-lg backdrop-blur-md shadow-sm"
+            style={{ fontSize: '10px', fontWeight: 700, color: config.textColor, background: config.bg, border: `1px solid ${config.border}` }}
+          >
+            {config.icon}
+            {config.label}
+          </span>
+          {movie.platform && (
+            <span
+              className="flex items-center justify-center px-2 py-1 rounded-lg backdrop-blur-md shadow-sm"
+              style={{ fontSize: '10px', fontWeight: 700, ...platformStyle(movie.platform) }}
             >
-              ▶️ Empezar a ver juntos
-            </button>
+              {movie.platform.replace('Amazon Prime Video', 'Prime').replace('Apple TV Plus', 'Apple TV+').replace('Paramount Plus', 'Paramount+')}
+            </span>
           )}
         </div>
+      </div>
+      
+      {/* Bottom: Content */}
+      <div className="flex flex-col flex-1 p-4 bg-white dark:bg-gray-900 relative z-10">
+        {/* Title & Type */}
+        <div className="flex gap-2 items-start justify-between mb-1.5">
+          <h3 className="leading-tight line-clamp-2 text-gray-900 dark:text-gray-100" style={{ fontSize: '15px', fontWeight: 700 }}>
+            {movie.title}
+          </h3>
+          <div className="mt-0.5">
+            {movie.type === 'series'
+              ? <Tv size={14} style={{ color: '#7C3AED' }} />
+              : <Film size={14} style={{ color: '#F97316' }} />}
+          </div>
+        </div>
+
+        {/* Year */}
+        {movie.year && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium">
+            {movie.year}
+          </p>
+        )}
+
+        {/* Overview preview (always visible, 2 lines) */}
+        {movie.overview && !expanded && (
+          <p style={{ fontSize: '12px', lineHeight: '1.5' }} className="text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">
+            {movie.overview}
+          </p>
+        )}
+
+        {/* Bottom actions row */}
+        <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
+          {/* Stars or Interest */}
+          {movie.status === 'pending' && currentUser ? (
+            <button
+              onClick={handleInterestToggle}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
+                hasVotedInterest
+                  ? 'bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 scale-105 shadow-sm'
+                  : 'bg-gray-50 text-gray-500 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+              }`}
+              style={{ fontSize: '12px', fontWeight: 600 }}
+              title="¡Me interesa!"
+            >
+              🔥 {movie.interestVotes?.length || 0}
+            </button>
+          ) : (
+            <div className="flex gap-0.5">
+              {[1, 2, 3, 4, 5].map(n => {
+                const userRatings = movie.userRatings || {};
+                const myRating = currentUser && userRatings[currentUser] ? userRatings[currentUser] : movie.rating;
+                return (
+                  <button
+                    key={n}
+                    disabled={readOnly || !onUpdateMovie}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (readOnly || !onUpdateMovie) return;
+                      if (currentUser) {
+                        onUpdateMovie({ ...movie, userRatings: { ...userRatings, [currentUser]: n } });
+                      } else {
+                        onUpdateMovie({ ...movie, rating: n });
+                      }
+                    }}
+                    className="transition-transform hover:scale-125 disabled:cursor-default"
+                  >
+                    <Star
+                      size={16}
+                      className={n <= myRating ? 'text-amber-400 fill-amber-400' : 'text-gray-200 fill-gray-200 dark:text-gray-700 dark:fill-gray-700 transition-colors'}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Card Actions */}
+          <div className="flex items-center gap-1">
+            {!readOnly && (
+              <button
+                onClick={e => {
+                  e.stopPropagation();
+                  const order: MovieStatus[] = ['pending', 'watching', 'watched'];
+                  const next = order[(order.indexOf(movie.status) + 1) % 3];
+                  onStatusChange(movie.id, next);
+                }}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+                title="Cambiar estado"
+              >
+                <CheckCircle2 size={16} />
+              </button>
+            )}
+            {hasDetails && (
+              <button
+                onClick={e => { e.stopPropagation(); setExpanded(v => !v); }}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+              >
+                {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            )}
+            {!readOnly && (
+               <div className="flex gap-1 ml-1">
+                 <button
+                   onClick={e => { e.stopPropagation(); onEdit(movie); }}
+                   className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-900/30"
+                 >
+                   <Edit2 size={14} />
+                 </button>
+                 <button
+                   onClick={e => { e.stopPropagation(); onDelete(movie.id); }}
+                   className="p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
+                 >
+                   <Trash2 size={14} />
+                 </button>
+               </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Play Sync Button */}
+        {movie.status === 'watching' && currentUser && !readOnly && onUpdateMovie && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              onUpdateMovie({ ...movie, watchingSince: new Date(Date.now() + 6000).toISOString() });
+            }}
+            className="mt-3 w-full py-2 rounded-xl text-white font-bold flex items-center justify-center gap-1.5 transition-colors hover:brightness-110"
+            style={{ background: '#06B6D4', fontSize: '13px' }}
+          >
+            ▶️ Empezar a ver juntos
+          </button>
+        )}
       </div>
 
       {/* Expanded details */}
