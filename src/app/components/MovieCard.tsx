@@ -88,8 +88,8 @@ export function MovieCard({ movie, onEdit, onDelete, onStatusChange, onDetail, o
       onClick={() => onDetail?.(movie)}
     >
       {countdown !== null && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
-          <span className="text-white font-bold animate-ping" style={{ fontSize: countdown === 0 ? '48px' : '72px' }}>
+        <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl p-4" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
+          <span className="text-white font-black animate-ping text-center tracking-widest drop-shadow-2xl" style={{ fontSize: countdown === 0 ? '28px' : '64px', lineHeight: 1 }}>
             {countdown === 0 ? '▶️ PLAY' : countdown}
           </span>
         </div>

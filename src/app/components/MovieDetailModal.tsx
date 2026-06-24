@@ -75,12 +75,15 @@ export function MovieDetailModal({ movie, onClose, onEdit, onDelete, onStatusCha
 
         {/* --- LEFT COLUMN: Desktop Poster --- */}
         {movie.poster && (
-          <div className="hidden md:flex relative w-2/5 lg:w-[45%] flex-shrink-0 bg-black/5 dark:bg-black/20 border-r border-gray-200/50 dark:border-gray-800/50 items-center justify-center p-8 z-10">
+          <div className="hidden md:block relative w-2/5 lg:w-[45%] flex-shrink-0 bg-black dark:bg-gray-900 border-r border-gray-200/50 dark:border-gray-800/50 z-10">
             <img
               src={movie.poster}
               alt={movie.title}
-              className="w-full h-auto max-h-full object-contain rounded-2xl shadow-2xl drop-shadow-2xl"
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ objectPosition: 'center 20%' }}
             />
+            {/* Soft inner shadow/gradient for better blending */}
+            <div className="absolute inset-0 shadow-[inset_-20px_0_40px_rgba(0,0,0,0.3)] dark:shadow-[inset_-20px_0_40px_rgba(0,0,0,0.6)] pointer-events-none" />
           </div>
         )}
 
