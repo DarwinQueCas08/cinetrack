@@ -65,38 +65,46 @@ export function MovieDetailModal({ movie, onClose, onEdit, onDelete, onStatusCha
           />
         )}
 
-        {/* Hero Poster */}
-        {movie.poster && (
-          <div className="relative w-full h-48 sm:h-56 flex-shrink-0 z-10">
-            <img
-              src={movie.poster}
-              alt={movie.title}
-              className="w-full h-full object-cover"
-              style={{ objectPosition: 'center 20%' }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/10 to-black/40 dark:from-gray-900/95 dark:via-gray-900/10" />
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white backdrop-blur-md transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        )}
-
-        {/* Header */}
-        <div className={`flex items-center justify-between px-5 py-4 border-b border-gray-200/50 dark:border-gray-700/50 relative z-10 ${movie.poster ? '-mt-4' : ''}`}>
-          <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white truncate pr-4 tracking-tight">
-            {movie.title}
-          </h2>
-          {!movie.poster && (
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400 transition-colors"
-            >
-              <X size={20} />
-            </button>
+        {/* Header with floating poster */}
+        <div className="relative z-10 flex gap-4 p-5 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
+          {movie.poster && (
+            <div className="flex-shrink-0 w-28 sm:w-36 rounded-xl overflow-hidden shadow-lg border border-gray-200/30 dark:border-gray-700/50" style={{ marginTop: '-10px' }}>
+              <img
+                src={movie.poster}
+                alt={movie.title}
+                className="w-full h-auto object-cover"
+              />
+            </div>
           )}
+          
+          <div className="flex-1 min-w-0 flex flex-col pt-1">
+            <div className="flex justify-between items-start">
+              <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-tight pr-2">
+                {movie.title}
+              </h2>
+              <button
+                onClick={onClose}
+                className="p-2 -mr-2 -mt-2 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {/* Quick Metadata under title */}
+            <div className="flex items-center gap-2 flex-wrap mt-auto pt-3">
+              <span
+                className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm"
+                style={{ color: cfg.textColor, background: cfg.bg, border: `1px solid ${cfg.border}` }}
+              >
+                {cfg.icon} {cfg.label}
+              </span>
+              {movie.year && (
+                <span className="flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                  <Calendar size={11} /> {movie.year}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Scrollable Content */}
@@ -104,19 +112,6 @@ export function MovieDetailModal({ movie, onClose, onEdit, onDelete, onStatusCha
           
           {/* Metadata */}
           <div className="flex items-center gap-3 flex-wrap">
-            <span
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm"
-              style={{ color: cfg.textColor, background: cfg.bg, border: `1px solid ${cfg.border}` }}
-            >
-              {cfg.icon} {cfg.label}
-            </span>
-
-            {movie.year && (
-              <span className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
-                <Calendar size={12} /> {movie.year}
-              </span>
-            )}
-
             {movie.platform && (
               <span className="flex items-center gap-1 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2.5 py-1 rounded-full border border-orange-200 dark:border-orange-800">
                 <Monitor size={12} /> {movie.platform}
