@@ -47,291 +47,304 @@ export function MovieDetailModal({ movie, onClose, onEdit, onDelete, onStatusCha
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
       
-      <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-2xl rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10" style={{ maxHeight: '85vh' }}>
+      <div className="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-3xl rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-10" style={{ maxHeight: '85vh', minHeight: '60vh' }}>
         
-        {/* Dynamic Blurred Background */}
+        {/* Dynamic Blurred Background across the entire modal */}
         {movie.poster && (
           <div 
-            className="absolute inset-0 z-0 opacity-20 dark:opacity-40 mix-blend-overlay pointer-events-none"
+            className="absolute inset-0 z-0 opacity-20 dark:opacity-30 mix-blend-overlay pointer-events-none"
             style={{
               backgroundImage: `url(${movie.poster})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              filter: 'blur(40px)',
+              filter: 'blur(60px)',
             }}
           />
         )}
 
-        {/* Header with floating poster */}
-        <div className="relative z-10 flex gap-4 p-5 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
-          {movie.poster && (
-            <div className="flex-shrink-0 w-28 sm:w-36 rounded-xl overflow-hidden shadow-lg border border-gray-200/30 dark:border-gray-700/50" style={{ marginTop: '-10px' }}>
-              <img
-                src={movie.poster}
-                alt={movie.title}
-                className="w-full h-auto object-cover"
-              />
-            </div>
-          )}
+        {/* Global Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-full bg-black/10 hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 text-gray-800 dark:text-gray-200 backdrop-blur-md transition-colors z-50"
+        >
+          <X size={20} />
+        </button>
+
+        {/* --- LEFT COLUMN: Desktop Poster --- */}
+        {movie.poster && (
+          <div className="hidden md:flex relative w-2/5 lg:w-[45%] flex-shrink-0 bg-black/5 dark:bg-black/20 border-r border-gray-200/50 dark:border-gray-800/50 items-center justify-center p-8 z-10">
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              className="w-full h-auto max-h-full object-contain rounded-2xl shadow-2xl drop-shadow-2xl"
+            />
+          </div>
+        )}
+
+        {/* --- MOBILE HEADER: Hero Poster --- */}
+        {movie.poster && (
+          <div className="md:hidden relative w-full h-56 flex-shrink-0 z-10">
+            <img
+              src={movie.poster}
+              alt={movie.title}
+              className="w-full h-full object-cover"
+              style={{ objectPosition: 'center 20%' }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-black/30 dark:from-gray-900/95 dark:via-transparent" />
+          </div>
+        )}
+
+        {/* --- RIGHT COLUMN: Content --- */}
+        <div className="flex-1 flex flex-col relative z-10 min-w-0" style={{ maxHeight: '100%' }}>
           
-          <div className="flex-1 min-w-0 flex flex-col pt-1">
-            <div className="flex justify-between items-start">
-              <h2 className="text-xl md:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-tight pr-2">
-                {movie.title}
-              </h2>
-              <button
-                onClick={onClose}
-                className="p-2 -mr-2 -mt-2 rounded-full hover:bg-gray-200/50 dark:hover:bg-gray-700/50 text-gray-500 dark:text-gray-400 transition-colors flex-shrink-0"
-              >
-                <X size={20} />
-              </button>
-            </div>
+          {/* Header */}
+          <div className={`p-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50 flex-shrink-0 ${movie.poster ? '-mt-10 md:mt-0 relative' : ''}`}>
+            <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white pr-8 tracking-tight leading-tight mb-3">
+              {movie.title}
+            </h2>
             
-            {/* Quick Metadata under title */}
-            <div className="flex items-center gap-2 flex-wrap mt-auto pt-3">
+            <div className="flex items-center gap-2 flex-wrap">
               <span
-                className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm"
                 style={{ color: cfg.textColor, background: cfg.bg, border: `1px solid ${cfg.border}` }}
               >
                 {cfg.icon} {cfg.label}
               </span>
+
               {movie.year && (
-                <span className="flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
-                  <Calendar size={11} /> {movie.year}
+                <span className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
+                  <Calendar size={12} /> {movie.year}
+                </span>
+              )}
+
+              {movie.platform && (
+                <span className="flex items-center gap-1 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2.5 py-1 rounded-full border border-orange-200 dark:border-orange-800">
+                  <Monitor size={12} /> {movie.platform}
                 </span>
               )}
             </div>
           </div>
-        </div>
 
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-6 relative z-10 custom-scrollbar">
-          
-          {/* Metadata */}
-          <div className="flex items-center gap-3 flex-wrap">
-            {movie.platform && (
-              <span className="flex items-center gap-1 text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 px-2.5 py-1 rounded-full border border-orange-200 dark:border-orange-800">
-                <Monitor size={12} /> {movie.platform}
-              </span>
-            )}
-          </div>
-
-          {/* Rating */}
-          <div className="flex items-center gap-3 bg-gray-50/80 dark:bg-gray-800/80 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(n => {
-                const userRatings = movie.userRatings || {};
-                const myRating = currentUser && userRatings[currentUser] ? userRatings[currentUser] : movie.rating;
-                return (
-                  <button
-                    key={n}
-                    disabled={readOnly || !onUpdateMovie}
-                    onClick={() => {
-                      if (readOnly || !onUpdateMovie) return;
-                      if (currentUser) onUpdateMovie({ ...movie, userRatings: { ...userRatings, [currentUser]: n } });
-                      else onUpdateMovie({ ...movie, rating: n });
-                    }}
-                    className="transition-transform hover:scale-125 disabled:cursor-default"
-                  >
-                    <Star
-                      size={24}
-                      className={n <= myRating ? 'text-amber-400 fill-amber-400' : 'text-gray-300 dark:text-gray-600'}
-                    />
-                  </button>
-                );
-              })}
-            </div>
-            {(() => {
-              const userRatings = movie.userRatings || {};
-              const avgRating = Object.keys(userRatings).length > 0 
-                ? Object.values(userRatings).reduce((a, b) => a + b, 0) / Object.keys(userRatings).length
-                : movie.rating;
-              if (avgRating > 0) {
-                return (
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    {avgRating.toFixed(1)} {Object.keys(userRatings).length > 0 ? '(Promedio)' : RATING_LABELS[Math.round(avgRating)]}
-                  </span>
-                );
-              }
-              return <span className="text-xs text-gray-400 dark:text-gray-500">Sin calificar</span>;
-            })()}
-          </div>
-
-          {/* Genres */}
-          {movie.genres.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {movie.genres.map(g => (
-                <span key={g} className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
-                  {g}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Synopsis */}
-          {movie.overview && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Sinopsis</h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{movie.overview}</p>
-            </div>
-          )}
-
-          {/* Streaming Platforms */}
-          {movie.streamingPlatforms && movie.streamingPlatforms.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Disponible en</h3>
-              <div className="flex flex-wrap gap-2">
-                {movie.streamingPlatforms.map(p => {
-                  const s = platformStyle(p);
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            
+            {/* Rating */}
+            <div className="flex items-center justify-between gap-3 bg-gray-50/80 dark:bg-gray-800/80 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50">
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map(n => {
+                  const userRatings = movie.userRatings || {};
+                  const myRating = currentUser && userRatings[currentUser] ? userRatings[currentUser] : movie.rating;
                   return (
-                    <span
-                      key={p}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm"
-                      style={{ background: s.bg, color: s.color }}
+                    <button
+                      key={n}
+                      disabled={readOnly || !onUpdateMovie}
+                      onClick={() => {
+                        if (readOnly || !onUpdateMovie) return;
+                        if (currentUser) onUpdateMovie({ ...movie, userRatings: { ...userRatings, [currentUser]: n } });
+                        else onUpdateMovie({ ...movie, rating: n });
+                      }}
+                      className="transition-transform hover:scale-125 disabled:cursor-default"
                     >
-                      {p.replace('Amazon Prime Video', 'Prime Video').replace('Apple TV Plus', 'Apple TV+').replace('Paramount Plus', 'Paramount+')}
-                    </span>
+                      <Star
+                        size={24}
+                        className={n <= myRating ? 'text-amber-400 fill-amber-400' : 'text-gray-300 dark:text-gray-600'}
+                      />
+                    </button>
                   );
                 })}
               </div>
+              {(() => {
+                const userRatings = movie.userRatings || {};
+                const avgRating = Object.keys(userRatings).length > 0 
+                  ? Object.values(userRatings).reduce((a, b) => a + b, 0) / Object.keys(userRatings).length
+                  : movie.rating;
+                if (avgRating > 0) {
+                  return (
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      {avgRating.toFixed(1)} {Object.keys(userRatings).length > 0 ? '(Promedio)' : RATING_LABELS[Math.round(avgRating)]}
+                    </span>
+                  );
+                }
+                return <span className="text-xs text-gray-400 dark:text-gray-500">Sin calificar</span>;
+              })()}
             </div>
-          )}
 
-          {/* Series Info */}
-          {movie.type === 'series' && (
-            <div className="rounded-2xl p-4 flex flex-wrap gap-4 bg-violet-50/50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800/30">
-              <div className="flex items-center gap-1.5">
-                <Tv size={14} className="text-violet-600 dark:text-violet-400" />
-                <span className="text-sm font-bold text-violet-800 dark:text-violet-300">Serie</span>
+            {/* Genres */}
+            {movie.genres.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {movie.genres.map(g => (
+                  <span key={g} className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+                    {g}
+                  </span>
+                ))}
               </div>
-              {movie.seasons && (
-                <div className="text-center">
-                  <p className="text-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{movie.seasons}</p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">temporadas</p>
-                </div>
-              )}
-              {movie.episodes && (
-                <div className="text-center">
-                  <p className="text-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{movie.episodes}</p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">episodios</p>
-                </div>
-              )}
-              {movie.currentSeason && (
-                <div className="text-center">
-                  <p className="text-lg font-bold text-orange-500 dark:text-orange-400 leading-none">T{movie.currentSeason}</p>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400">viendo ahora</p>
-                </div>
-              )}
-            </div>
-          )}
+            )}
 
-          {/* Your Notes */}
-          {movie.notes && (
-            <div>
-              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
-                <StickyNote size={12} /> Tu Nota Personal
-              </h3>
-              <div className="bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-xl p-3 text-sm text-gray-700 dark:text-gray-300 italic">
-                "{movie.notes}"
+            {/* Synopsis */}
+            {movie.overview && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Sinopsis</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{movie.overview}</p>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Comments Section */}
-          <div className="pt-2">
-            <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
-              <MessageCircle size={12} /> Comentarios
-            </h3>
-            
-            <div className="space-y-3 mb-4">
-              {movie.comments && movie.comments.length > 0 ? (
-                movie.comments.map(comment => (
-                  <div key={comment.id} className="flex gap-2">
-                    <Avatar name={comment.user} size={24} />
-                    <div className="flex-1 bg-gray-50 dark:bg-gray-800/50 rounded-2xl rounded-tl-none p-3 border border-gray-100 dark:border-gray-700/50">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs font-bold text-gray-900 dark:text-gray-200">{comment.user}</span>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                          {new Date(comment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{comment.text}</p>
-                    </div>
+            {/* Streaming Platforms */}
+            {movie.streamingPlatforms && movie.streamingPlatforms.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Disponible en</h3>
+                <div className="flex flex-wrap gap-2">
+                  {movie.streamingPlatforms.map(p => {
+                    const s = platformStyle(p);
+                    return (
+                      <span
+                        key={p}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm"
+                        style={{ background: s.bg, color: s.color }}
+                      >
+                        {p.replace('Amazon Prime Video', 'Prime Video').replace('Apple TV Plus', 'Apple TV+').replace('Paramount Plus', 'Paramount+')}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Series Info */}
+            {movie.type === 'series' && (
+              <div className="rounded-2xl p-4 flex flex-wrap gap-4 bg-violet-50/50 dark:bg-violet-900/20 border border-violet-100 dark:border-violet-800/30">
+                <div className="flex items-center gap-1.5">
+                  <Tv size={14} className="text-violet-600 dark:text-violet-400" />
+                  <span className="text-sm font-bold text-violet-800 dark:text-violet-300">Serie</span>
+                </div>
+                {movie.seasons && (
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{movie.seasons}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">temporadas</p>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4 italic">
-                  Nadie ha comentado aún. ¡Sé el primero!
-                </p>
-              )}
-              <div ref={commentsEndRef} />
-            </div>
-
-            {/* Comment Input */}
-            {!readOnly && onUpdateMovie && (
-              <div className="flex gap-2 items-end relative z-10">
-                <textarea
-                  value={newComment}
-                  onChange={e => setNewComment(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleAddComment();
-                    }
-                  }}
-                  placeholder="Escribe un comentario..."
-                  className="flex-1 bg-gray-100 dark:bg-gray-800/80 border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-900 rounded-xl px-4 py-2.5 text-sm resize-none text-gray-900 dark:text-gray-100"
-                  rows={1}
-                  style={{ minHeight: '44px', maxHeight: '120px' }}
-                />
-                <button
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim()}
-                  className="p-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Send size={18} />
-                </button>
+                )}
+                {movie.episodes && (
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{movie.episodes}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">episodios</p>
+                  </div>
+                )}
+                {movie.currentSeason && (
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-orange-500 dark:text-orange-400 leading-none">T{movie.currentSeason}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">viendo ahora</p>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Footer Actions */}
-        {!readOnly && (
-          <div className="p-4 bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-200/50 dark:border-gray-700/50 flex flex-wrap gap-2 relative z-10">
-            {onStatusChange && (
-              <button
-                onClick={() => onStatusChange(movie.id, nextStatus[movie.status])}
-                className="flex-1 flex justify-center items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm"
-              >
-                Mover a {STATUS_CONFIG[nextStatus[movie.status]].label}
-              </button>
+            {/* Your Notes */}
+            {movie.notes && (
+              <div>
+                <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <StickyNote size={12} /> Tu Nota Personal
+                </h3>
+                <div className="bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 rounded-xl p-3 text-sm text-gray-700 dark:text-gray-300 italic">
+                  "{movie.notes}"
+                </div>
+              </div>
             )}
-            <div className="flex gap-2">
-              {onEdit && (
-                <button
-                  onClick={() => { onClose(); onEdit(movie); }}
-                  className="p-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm"
-                  title="Editar"
-                >
-                  <Edit2 size={18} />
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={() => { onClose(); onDelete(movie.id); }}
-                  className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors shadow-sm"
-                  title="Eliminar"
-                >
-                  <Trash2 size={18} />
-                </button>
+
+            {/* Comments Section */}
+            <div className="pt-2">
+              <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-1">
+                <MessageCircle size={12} /> Comentarios
+              </h3>
+              
+              <div className="space-y-3 mb-4">
+                {movie.comments && movie.comments.length > 0 ? (
+                  movie.comments.map(comment => (
+                    <div key={comment.id} className="flex gap-2">
+                      <Avatar name={comment.user} size={24} />
+                      <div className="flex-1 bg-gray-50 dark:bg-gray-800/50 rounded-2xl rounded-tl-none p-3 border border-gray-100 dark:border-gray-700/50">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-xs font-bold text-gray-900 dark:text-gray-200">{comment.user}</span>
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                            {new Date(comment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{comment.text}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-sm text-gray-400 dark:text-gray-500 py-4 italic">
+                    Nadie ha comentado aún. ¡Sé el primero!
+                  </p>
+                )}
+                <div ref={commentsEndRef} />
+              </div>
+
+              {/* Comment Input */}
+              {!readOnly && onUpdateMovie && (
+                <div className="flex gap-2 items-end relative z-10">
+                  <textarea
+                    value={newComment}
+                    onChange={e => setNewComment(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAddComment();
+                      }
+                    }}
+                    placeholder="Escribe un comentario..."
+                    className="flex-1 bg-gray-100 dark:bg-gray-800/80 border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-900 rounded-xl px-4 py-2.5 text-sm resize-none text-gray-900 dark:text-gray-100"
+                    rows={1}
+                    style={{ minHeight: '44px', maxHeight: '120px' }}
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                    className="p-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Send size={18} />
+                  </button>
+                </div>
               )}
             </div>
           </div>
-        )}
+
+          {/* Footer Actions */}
+          {!readOnly && (
+            <div className="p-4 bg-gray-50/80 dark:bg-gray-800/80 border-t border-gray-200/50 dark:border-gray-700/50 flex flex-wrap gap-2 flex-shrink-0">
+              {onStatusChange && (
+                <button
+                  onClick={() => onStatusChange(movie.id, nextStatus[movie.status])}
+                  className="flex-1 flex justify-center items-center gap-1.5 px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm"
+                >
+                  Mover a {STATUS_CONFIG[nextStatus[movie.status]].label}
+                </button>
+              )}
+              <div className="flex gap-2">
+                {onEdit && (
+                  <button
+                    onClick={() => { onClose(); onEdit(movie); }}
+                    className="p-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm"
+                    title="Editar"
+                  >
+                    <Edit2 size={18} />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={() => { onClose(); onDelete(movie.id); }}
+                    className="p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors shadow-sm"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
