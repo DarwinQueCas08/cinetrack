@@ -3,7 +3,7 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as kv from "./kv_store.tsx";
-import { createRecoveryService } from "./recovery.ts";
+import { createRecoveryService, allowsSessionRecovery } from "./recovery.ts";
 
 const app = new Hono();
 
@@ -60,21 +60,23 @@ const recovery = createRecoveryService({
   },
 });
 
-// Issue/rotate only after proving the current password, even with a valid session.
+// A valid session is mandatory. Only the temporarily allowed account skips reauthentication.
 app.post('/make-server-da14cc3d/auth/recovery-code', async (c) => {
   c.header('Cache-Control', 'no-store');
   try {
     const token = c.req.header('Authorization')?.split(' ')[1];
     const user = token ? await getUserFromToken(token) : null;
     if (!user) return c.json({ error: 'La sesión expiró. Inicia sesión de nuevo.' }, 401);
-    const { password } = await c.req.json();
-    if (typeof password !== 'string' || !password || password.length > 128 || !user.email) {
-      return c.json({ error: 'Introduce tu contraseña actual.' }, 400);
+    if (!allowsSessionRecovery(user.email)) {
+      const { password } = await c.req.json();
+      if (typeof password !== 'string' || !password || password.length > 128 || !user.email) {
+        return c.json({ error: 'Introduce tu contraseña actual.' }, 400);
+      }
+      const { data, error } = await anonClient().auth.signInWithPassword({ email: user.email, password });
+      if (error || data.user?.id !== user.id) return c.json({ error: 'No se pudo verificar la contraseña actual.' }, 403);
     }
-    const { data, error } = await anonClient().auth.signInWithPassword({ email: user.email, password });
-    if (error || data.user?.id !== user.id) return c.json({ error: 'No se pudo verificar la contraseña actual.' }, 403);
     // Auth email is stable; user_metadata can be edited by the user.
-    if (!user.email.endsWith('@cinetrack.local')) return c.json({ error: 'Cuenta incompatible. Contacta al administrador.' }, 400);
+    if (!user.email?.endsWith('@cinetrack.local')) return c.json({ error: 'Cuenta incompatible. Contacta al administrador.' }, 400);
     const username = user.email.slice(0, -'@cinetrack.local'.length);
     const code = await recovery.issue(username, user.id);
     return c.json({ code });

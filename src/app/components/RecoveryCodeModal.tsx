@@ -3,7 +3,9 @@ import { AuthSession } from './AuthScreen';
 import { projectId } from '/utils/supabase/info';
 import * as Dialog from '@radix-ui/react-dialog';
 
-export function RecoveryCodeModal({ session, onClose }: { session: AuthSession; onClose: () => void }) {
+export function RecoveryCodeModal({ session, onClose, onRefreshSession }: { session: AuthSession; onClose: () => void; onRefreshSession: () => Promise<AuthSession | null> }) {
+  // TEMPORARY: remove together with TEMPORARY_SESSION_RECOVERY_EMAIL on the server.
+  const allowSessionRecovery = session.username.trim().toLowerCase() === 'nesquikconleche';
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -15,11 +17,16 @@ export function RecoveryCodeModal({ session, onClose }: { session: AuthSession; 
     setBusy(true);
     setError('');
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-da14cc3d/auth/recovery-code`, {
+      const requestCode = (token: string) => fetch(`https://${projectId}.supabase.co/functions/v1/make-server-da14cc3d/auth/recovery-code`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ password }),
       });
+      let response = await requestCode(session.accessToken);
+      if (response.status === 401) {
+        const refreshed = await onRefreshSession();
+        if (refreshed) response = await requestCode(refreshed.accessToken);
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'No se pudo generar el código.');
       setCode(data.code);
@@ -43,12 +50,13 @@ export function RecoveryCodeModal({ session, onClose }: { session: AuthSession; 
         <label className="flex gap-2 text-sm mb-4"><input type="checkbox" checked={saved} onChange={e => setSaved(e.target.checked)} />He guardado el código en un lugar seguro.</label>
         <button onClick={onClose} disabled={!saved} className="w-full rounded-xl bg-violet-600 disabled:opacity-40 text-white p-3">Listo</button>
       </> : <form onSubmit={generate} className="flex flex-col gap-4">
-        <p className="text-sm text-gray-600">Genera un código para recuperar tu cuenta si olvidas la contraseña. Si ya tenías uno, será reemplazado. Confirma tu contraseña actual para continuar.</p>
-        <label className="text-sm font-semibold">Contraseña actual
+        <p className="text-sm text-gray-600">Genera un código para recuperar tu cuenta si olvidas la contraseña. Si ya tenías uno, será reemplazado. {allowSessionRecovery ? 'Temporalmente puedes generar el código con tu sesión iniciada, sin introducir la contraseña actual.' : 'Confirma tu contraseña actual para continuar.'}</p>
+        {allowSessionRecovery && <p className="rounded-xl bg-violet-50 p-3 text-sm text-violet-700">Guarda el código antes de cerrar sesión. Después úsalo en «¿Olvidaste tu contraseña?» para elegir una contraseña nueva.</p>}
+        {!allowSessionRecovery && <label className="text-sm font-semibold">Contraseña actual
           <input autoFocus required type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} className="w-full mt-2 p-3 border rounded-xl" />
-        </label>
+        </label>}
         {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-        <button disabled={busy || !password} className="rounded-xl bg-violet-600 disabled:opacity-40 text-white p-3">{busy ? 'Generando…' : 'Generar código de recuperación'}</button>
+        <button disabled={busy || (!allowSessionRecovery && !password)} className="rounded-xl bg-violet-600 disabled:opacity-40 text-white p-3">{busy ? 'Generando…' : 'Generar código de recuperación'}</button>
         <button type="button" disabled={busy} onClick={onClose} className="text-sm text-gray-600">Cancelar</button>
       </form>}
       </Dialog.Content>

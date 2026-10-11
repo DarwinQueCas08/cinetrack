@@ -1,3 +1,10 @@
+// TEMPORARY: remove when the owner requests ending session-only recovery.
+const TEMPORARY_SESSION_RECOVERY_EMAIL = 'nesquikconleche@cinetrack.local';
+
+export function allowsSessionRecovery(email?: string | null): boolean {
+  return email?.toLowerCase() === TEMPORARY_SESSION_RECOVERY_EMAIL;
+}
+
 // Recovery codes contain 256 random bits. Store only their SHA-256 digest.
 export function normalizeCode(code: string): string {
   return code.replace(/[\s-]/g, '').toLowerCase();

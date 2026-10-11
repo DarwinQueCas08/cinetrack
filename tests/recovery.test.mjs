@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRecoveryService, hashCode, normalizeCode, recoveryKey } from '../supabase/functions/server/recovery.ts';
+import { createRecoveryService, hashCode, normalizeCode, recoveryKey, allowsSessionRecovery } from '../supabase/functions/server/recovery.ts';
+
+test('temporary session-only recovery is restricted to the exact account email', () => {
+  assert.equal(allowsSessionRecovery('nesquikconleche@cinetrack.local'), true);
+  assert.equal(allowsSessionRecovery('Nesquikconleche@cinetrack.local'), true);
+  for (const email of [undefined, null, '', 'other@cinetrack.local', 'nesquikconleche@example.com', 'nesquikconleche@cinetrack.local.evil']) {
+    assert.equal(allowsSessionRecovery(email), false);
+  }
+});
 
 function fixture(updatePassword = async () => true) {
   const records = new Map();

@@ -829,7 +829,7 @@ export default function App() {
       )}
       {showRandom && <RandomPicker movies={movies} onClose={() => setShowRandom(false)} onStatusChange={changeStatus} />}
       {showShare && <ShareModal movies={movies} onClose={() => setShowShare(false)} />}
-      {showRecovery && <RecoveryCodeModal session={session} onClose={() => setShowRecovery(false)} />}
+      {showRecovery && <RecoveryCodeModal session={session} onClose={() => setShowRecovery(false)} onRefreshSession={() => refreshSession(session)} />}
       {showProfile && <ProfileModal username={session.username} loadProfile={loadProfile} onClose={() => setShowProfile(false)} onRecovery={() => { setShowProfile(false); setShowRecovery(true); }} />}
       {showCollabModal && (
         <CollabModal movies={movies} onJoinRoom={handleJoinRoom} onClose={() => setShowCollabModal(false)} />
