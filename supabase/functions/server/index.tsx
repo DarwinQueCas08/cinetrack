@@ -3,6 +3,7 @@ import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as kv from "./kv_store.tsx";
+import { createRecoveryService } from "./recovery.ts";
 
 const app = new Hono();
 
@@ -44,6 +45,54 @@ async function getUserFromToken(token: string) {
   if (error || !data.user) return null;
   return data.user;
 }
+
+const recovery = createRecoveryService({
+  save: kv.set,
+  async consume(key, hash) {
+    const { data, error } = await adminClient().from('kv_store_da14cc3d')
+      .delete().eq('key', key).eq('value->>hash', hash).select('value').maybeSingle();
+    if (error) throw new Error('Recovery storage unavailable');
+    return data?.value ?? null;
+  },
+  async updatePassword(userId, password) {
+    const { error } = await adminClient().auth.admin.updateUserById(userId, { password });
+    return !error;
+  },
+});
+
+// Issue/rotate only after proving the current password, even with a valid session.
+app.post('/make-server-da14cc3d/auth/recovery-code', async (c) => {
+  c.header('Cache-Control', 'no-store');
+  try {
+    const token = c.req.header('Authorization')?.split(' ')[1];
+    const user = token ? await getUserFromToken(token) : null;
+    if (!user) return c.json({ error: 'La sesión expiró. Inicia sesión de nuevo.' }, 401);
+    const { password } = await c.req.json();
+    if (typeof password !== 'string' || !password || password.length > 128 || !user.email) {
+      return c.json({ error: 'Introduce tu contraseña actual.' }, 400);
+    }
+    const { data, error } = await anonClient().auth.signInWithPassword({ email: user.email, password });
+    if (error || data.user?.id !== user.id) return c.json({ error: 'No se pudo verificar la contraseña actual.' }, 403);
+    // Auth email is stable; user_metadata can be edited by the user.
+    if (!user.email.endsWith('@cinetrack.local')) return c.json({ error: 'Cuenta incompatible. Contacta al administrador.' }, 400);
+    const username = user.email.slice(0, -'@cinetrack.local'.length);
+    const code = await recovery.issue(username, user.id);
+    return c.json({ code });
+  } catch {
+    return c.json({ error: 'No se pudo generar el código. Inténtalo de nuevo.' }, 503);
+  }
+});
+
+app.post('/make-server-da14cc3d/auth/reset-password', async (c) => {
+  c.header('Cache-Control', 'no-store');
+  try {
+    const { username, code, password } = await c.req.json();
+    if (await recovery.reset(username, code, password)) return c.json({ ok: true });
+    return c.json({ error: 'No se pudo restablecer. Revisa el usuario y el código, y usa una contraseña de 8 a 128 caracteres. Si ya usaste el código, contacta al administrador.' }, 400);
+  } catch {
+    return c.json({ error: 'No se pudo completar la recuperación. Si el código dejó de funcionar, contacta al administrador.' }, 503);
+  }
+});
 
 // POST /auth/signup
 app.post("/make-server-da14cc3d/auth/signup", async (c) => {

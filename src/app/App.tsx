@@ -1,6 +1,6 @@
 /* MARKER-MAKE-KIT-INVOKED */
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Film, Search, BarChart2, Shuffle, Plus, Download, Upload, Clapperboard, Share2, ArrowUpDown, Users, LogOut, User, Moon, Sun } from 'lucide-react';
+import { Film, Search, BarChart2, Shuffle, Plus, Download, Upload, Clapperboard, Share2, ArrowUpDown, Users, LogOut, User, Moon, Sun, KeyRound } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Movie, MovieStatus } from './types';
 import { MovieCard } from './components/MovieCard';
@@ -14,6 +14,7 @@ import { SharedListView } from './components/SharedListView';
 import { CollabModal } from './components/CollabModal';
 import { CollabView } from './components/CollabView';
 import { AuthScreen, AuthSession } from './components/AuthScreen';
+import { RecoveryCodeModal } from './components/RecoveryCodeModal';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { MovieDetailModal } from './components/MovieDetailModal';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
@@ -240,6 +241,7 @@ export default function App() {
   const [prefill, setPrefill] = useState<Partial<Movie> | undefined>();
   const [showRandom, setShowRandom] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [detailMovie, setDetailMovie] = useState<Movie | null>(null);
@@ -533,6 +535,7 @@ export default function App() {
             </button>
 
             {/* User — avatar + name + logout */}
+            <button onClick={() => setShowRecovery(true)} className="p-2 rounded-xl text-violet-600 hover:bg-violet-50" title="Proteger cuenta: código de recuperación" aria-label="Proteger cuenta: código de recuperación"><KeyRound size={16} /></button>
             <div className="flex items-center gap-1 ml-1 pl-1 sm:pl-2 border-l border-gray-100">
               <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F5F3FF' }}>
                 <User size={12} style={{ color: '#7C3AED' }} />
@@ -803,6 +806,7 @@ export default function App() {
       )}
       {showRandom && <RandomPicker movies={movies} onClose={() => setShowRandom(false)} onStatusChange={changeStatus} />}
       {showShare && <ShareModal movies={movies} onClose={() => setShowShare(false)} />}
+      {showRecovery && <RecoveryCodeModal session={session} onClose={() => setShowRecovery(false)} />}
       {showCollabModal && (
         <CollabModal movies={movies} onJoinRoom={handleJoinRoom} onClose={() => setShowCollabModal(false)} />
       )}

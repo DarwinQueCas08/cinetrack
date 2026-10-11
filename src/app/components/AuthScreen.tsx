@@ -17,27 +17,49 @@ interface AuthScreenProps {
 }
 
 export function AuthScreen({ onAuth }: AuthScreenProps) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'recover'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [code, setCode] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [message, setMessage] = useState('');
+
+  const changeMode = (next: 'login' | 'register' | 'recover') => {
+    setMode(next);
+    setError('');
+    setMessage('');
+    setPassword('');
+    setCode('');
+    setConfirmation('');
+    setShowPass(false);
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password) return;
+    if (mode === 'recover' && (password.length < 8 || password.length > 128 || password !== confirmation)) {
+      setError('Las contraseñas deben coincidir y tener entre 8 y 128 caracteres.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      const endpoint = mode === 'login' ? 'signin' : 'signup';
+      const endpoint = mode === 'recover' ? 'reset-password' : mode === 'login' ? 'signin' : 'signup';
       const res = await fetch(`${SERVER}/auth/${endpoint}`, {
         method: 'POST',
         headers: HEADERS,
-        body: JSON.stringify({ username: username.trim(), password }),
+        body: JSON.stringify({ username: username.trim(), password, ...(mode === 'recover' ? { code } : {}) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Error al autenticar');
+      if (mode === 'recover') {
+        changeMode('login');
+        setMessage('Contraseña restablecida. Inicia sesión con tu nueva contraseña. Al entrar, genera otro código de recuperación.');
+        return;
+      }
       onAuth({
         userId: data.userId,
         username: data.username,
@@ -74,7 +96,8 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
             {(['login', 'register'] as const).map(m => (
               <button
                 key={m}
-                onClick={() => { setMode(m); setError(''); }}
+                disabled={loading}
+                onClick={() => changeMode(m)}
                 className="flex-1 py-4 transition-colors"
                 style={{
                   fontSize: '14px',
@@ -91,6 +114,8 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
           </div>
 
           <form onSubmit={submit} className="p-6 flex flex-col gap-4">
+            {mode === 'recover' && <div className="text-sm text-gray-600"><h2 className="font-bold text-gray-900 mb-2">Recuperar cuenta</h2><p>Usa el código que guardaste desde tu cuenta. Si no tienes uno ni una sesión abierta, contacta al administrador para verificar tu identidad y restablecer el acceso.</p></div>}
+            {message && <p role="status" className="text-sm text-green-700 bg-green-50 p-3 rounded-xl">{message}</p>}
             {/* Username */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="block mb-1.5">
@@ -122,7 +147,7 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
             {/* Password */}
             <div>
               <label style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="block mb-1.5">
-                Contraseña
+                {mode === 'recover' ? 'Nueva contraseña' : 'Contraseña'}
               </label>
               <div className="relative">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#9CA3AF' }} />
@@ -132,6 +157,8 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
                   type={showPass ? 'text' : 'password'}
                   placeholder="••••••••"
                   required
+                  minLength={mode === 'recover' ? 8 : mode === 'register' ? 6 : undefined}
+                  maxLength={mode === 'recover' ? 128 : undefined}
                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   className="w-full pl-10 pr-11 py-3 rounded-2xl border outline-none transition-all"
                   style={{ fontSize: '15px', borderColor: '#E5E7EB', background: '#F9FAFB' }}
@@ -152,18 +179,28 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
               )}
             </div>
 
+            {mode === 'recover' && <>
+              <label className="text-sm font-semibold text-gray-600">Confirmar nueva contraseña
+                <input type="password" autoComplete="new-password" value={confirmation} onChange={e => setConfirmation(e.target.value)} required minLength={8} maxLength={128} className="w-full mt-2 p-3 rounded-2xl border border-gray-200" />
+              </label>
+              <label className="text-sm font-semibold text-gray-600">Código de recuperación
+                <input value={code} onChange={e => setCode(e.target.value)} required autoComplete="off" spellCheck={false} autoCapitalize="none" maxLength={100} className="w-full mt-2 p-3 rounded-2xl border border-gray-200 font-mono" />
+              </label>
+            </>}
+            {mode === 'login' && <button type="button" disabled={loading} onClick={() => changeMode('recover')} className="text-sm text-violet-600 text-right">¿Olvidaste tu contraseña?</button>}
+
             {/* Error */}
             {error && (
               <div className="flex items-start gap-2 rounded-xl px-3 py-2.5" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
                 <AlertCircle size={14} style={{ color: '#EF4444', flexShrink: 0, marginTop: '1px' }} />
-                <p style={{ fontSize: '13px', color: '#DC2626' }}>{error}</p>
+                <p role="alert" style={{ fontSize: '13px', color: '#DC2626' }}>{error}</p>
               </div>
             )}
 
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading || !username.trim() || !password}
+              disabled={loading || !username.trim() || !password || (mode === 'recover' && (!code.trim() || !confirmation))}
               className="w-full py-3.5 rounded-2xl text-white transition-all flex items-center justify-center gap-2"
               style={{
                 fontSize: '15px',
@@ -174,9 +211,9 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
               }}
             >
               {loading ? (
-                <><Loader2 size={16} className="animate-spin" /> {mode === 'login' ? 'Entrando...' : 'Creando cuenta...'}</>
+                <><Loader2 size={16} className="animate-spin" /> {mode === 'recover' ? 'Restableciendo...' : mode === 'login' ? 'Entrando...' : 'Creando cuenta...'}</>
               ) : (
-                mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
+                mode === 'recover' ? 'Restablecer contraseña' : mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'
               )}
             </button>
 
@@ -186,7 +223,8 @@ export function AuthScreen({ onAuth }: AuthScreenProps) {
               {' '}
               <button
                 type="button"
-                onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }}
+                disabled={loading}
+                onClick={() => changeMode(mode === 'login' ? 'register' : 'login')}
                 style={{ color: '#7C3AED', fontWeight: 600 }}
               >
                 {mode === 'login' ? 'Regístrate' : 'Inicia sesión'}

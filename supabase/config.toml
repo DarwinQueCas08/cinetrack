@@ -1,0 +1,4 @@
+project_id = "cinetrack"
+
+[functions.make-server-da14cc3d]
+entrypoint = "./functions/server/index.tsx"
