@@ -32,6 +32,46 @@ inicia sesión y genera otro. No se cambia el ID ni las listas del usuario.
 
 ## Recuperación controlada por el administrador
 
+### Panel de CineTrack
+
+El panel se abre desde **Mi perfil → Panel de administrador**. Solo las cuentas
+con `app_metadata.cinetrack_admin: true` pueden verlo y usar sus rutas del servidor.
+El nombre `Admin`, los datos editables de usuario y localStorage no otorgan permisos.
+
+Activación inicial para la cuenta `Admin` elegida por el propietario:
+
+1. Si aún no existe, crea la cuenta `Admin` desde CineTrack con una contraseña
+   privada. Comprueba que es tu cuenta antes de asignarle permisos.
+2. Ejecuta `scripts/enable-admin.sql` una vez en el SQL Editor de Supabase.
+   Debe devolver la cuenta `admin@cinetrack.local`. Si no devuelve filas, no
+   existe esa cuenta y no cambió nada.
+3. Publica `index.tsx`, `recovery.ts`, `admin-recovery.ts` y `kv_store.tsx` en la
+   función `make-server-da14cc3d`, conservando esos nombres. Publica el frontend.
+4. Inicia sesión como `Admin` y abre tu perfil. Si ya estabas dentro, vuelve a
+   abrir el perfil para cargar el permiso actualizado.
+
+Para recuperar una cuenta: busca el usuario, verifica sus datos e identidad,
+marca la confirmación e introduce **tu contraseña de administrador**. El titular
+no necesita conocer su contraseña anterior. Guarda el código mostrado y
+entrégalo por un canal privado; el titular lo usa en «¿Olvidaste tu contraseña?».
+Un código nuevo reemplaza el anterior. El panel no guarda secretos en el navegador.
+El servidor registra IDs y fecha de la solicitud, nunca el código ni contraseñas.
+Cada petición vuelve a comprobar el permiso; no basta con abrir el panel.
+
+Para retirar el permiso de `Admin`, ejecuta como propietario en SQL Editor:
+
+```sql
+UPDATE auth.users
+SET raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) - 'cinetrack_admin'
+WHERE lower(email) = 'admin@cinetrack.local';
+```
+
+Las rutas administrativas usan la clave de servicio solo en el servidor.
+Para proyectos grandes, la búsqueda exacta actual recorre páginas de Auth;
+se puede añadir un índice de nombres en una tabla protegida si fuera necesario.
+
+### Alternativa desde Supabase
+
 Un administrador puede emitir un código para cualquier usuario desde Supabase,
 sin conocer la contraseña anterior y sin requerir una sesión del titular:
 
@@ -80,6 +120,10 @@ ni compartir su contraseña. Evita ejecutar la emisión en terminales grabadas.
 códigos, rotación, uso único, entradas inválidas, concurrencia y fallo de Auth.
 `npm run build` comprueba el empaquetado del frontend.
 
+`node --experimental-strip-types --test tests/admin-recovery.test.mjs` verifica
+permisos, sesiones, contraseña de administrador, cuentas sustituidas, revocación,
+rotación del código y registro sin secretos. No sustituye una prueba con Auth real.
+
 Los códigos tienen 256 bits aleatorios, se guardan con SHA-256 y se consumen con
 un único DELETE condicionado por clave y hash en PostgreSQL. El servidor exige
 sesión válida y contraseña actual para emitirlos; el restablecimiento no informa
@@ -97,3 +141,6 @@ https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid
 
 Configuración de entradas de funciones:
 https://supabase.com/docs/guides/functions/development-tips
+
+Metadatos y autorización:
+https://supabase.com/docs/guides/database/postgres/row-level-security

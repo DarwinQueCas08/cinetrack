@@ -4,6 +4,7 @@ import { logger } from "npm:hono/logger";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import * as kv from "./kv_store.tsx";
 import { createRecoveryService } from "./recovery.ts";
+import { createAdminRecoveryService, AdminRecoveryError, isCineTrackAdmin } from './admin-recovery.ts';
 
 const app = new Hono();
 
@@ -58,6 +59,57 @@ const recovery = createRecoveryService({
     const { error } = await adminClient().auth.admin.updateUserById(userId, { password });
     return !error;
   },
+});
+
+const adminRecovery = createAdminRecoveryService({
+  getActor: getUserFromToken,
+  async findAccount(username) {
+    for (let page = 1; ; page++) {
+      const { data, error } = await adminClient().auth.admin.listUsers({ page, perPage: 100 });
+      if (error) throw new Error('Account lookup unavailable');
+      const user = data.users.find(user => user.email?.toLowerCase() === makeEmail(username));
+      if (user?.email) {
+        const displayName = user.user_metadata?.username;
+        return { userId: user.id, username: typeof displayName === 'string' && displayName.trim().toLowerCase() === username ? displayName : username, email: user.email, createdAt: user.created_at ?? null };
+      }
+      if (data.users.length < 100) return null;
+    }
+  },
+  async verifyPassword(actor, password) {
+    if (!actor.email) return false;
+    const { data, error } = await anonClient().auth.signInWithPassword({ email: actor.email, password });
+    return !error && data.user?.id === actor.id;
+  },
+  async audit(adminId, targetId) {
+    await kv.set(`auth:admin-recovery-audit:${crypto.randomUUID()}`, { adminId, targetId, action: 'recovery_code_requested', at: new Date().toISOString() });
+  },
+  issue: recovery.issue,
+});
+
+app.post('/make-server-da14cc3d/admin/accounts/lookup', async (c) => {
+  c.header('Cache-Control', 'no-store');
+  try {
+    const token = c.req.header('Authorization')?.split(' ')[1];
+    // Reject unauthorized callers before reading input or accessing the user list.
+    await adminRecovery.authorize(token);
+    const { username } = await c.req.json();
+    return c.json({ account: await adminRecovery.lookup(token, username) });
+  } catch (error) {
+    if (error instanceof AdminRecoveryError) return c.json({ error: error.message }, error.status);
+    return c.json({ error: 'No se pudo buscar la cuenta. Inténtalo de nuevo.' }, 503);
+  }
+});
+
+app.post('/make-server-da14cc3d/admin/recovery-code', async (c) => {
+  c.header('Cache-Control', 'no-store');
+  try {
+    const token = c.req.header('Authorization')?.split(' ')[1];
+    await adminRecovery.authorize(token);
+    return c.json(await adminRecovery.issue(token, await c.req.json()));
+  } catch (error) {
+    if (error instanceof AdminRecoveryError) return c.json({ error: error.message }, error.status);
+    return c.json({ error: 'No se pudo generar el código. Inténtalo de nuevo.' }, 503);
+  }
 });
 
 // Issue/rotate only after proving the current password, even with a valid session.
@@ -188,6 +240,7 @@ app.get("/make-server-da14cc3d/auth/me", async (c) => {
       email: user.email ?? null,
       createdAt: user.created_at ?? null,
       lastSignInAt: user.last_sign_in_at ?? null,
+      isAdmin: isCineTrackAdmin(user),
     });
   } catch (e) {
     return c.json({ error: `Error: ${e}` }, 500);

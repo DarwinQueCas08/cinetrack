@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { CalendarDays, KeyRound, Loader2, Mail, User, X } from 'lucide-react';
+import { CalendarDays, KeyRound, Loader2, Mail, User, X, ShieldCheck } from 'lucide-react';
 
 export interface AccountProfile {
   userId: string;
@@ -8,6 +8,7 @@ export interface AccountProfile {
   email?: string | null;
   createdAt?: string | null;
   lastSignInAt?: string | null;
+  isAdmin?: boolean;
 }
 
 interface ProfileModalProps {
@@ -15,6 +16,7 @@ interface ProfileModalProps {
   loadProfile: () => Promise<AccountProfile>;
   onClose: () => void;
   onRecovery: () => void;
+  onAdmin: () => void;
 }
 
 function formatDate(value?: string | null) {
@@ -25,7 +27,7 @@ function formatDate(value?: string | null) {
   });
 }
 
-export function ProfileModal({ username, loadProfile, onClose, onRecovery }: ProfileModalProps) {
+export function ProfileModal({ username, loadProfile, onClose, onRecovery, onAdmin }: ProfileModalProps) {
   const [profile, setProfile] = useState<AccountProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -80,6 +82,7 @@ export function ProfileModal({ username, loadProfile, onClose, onRecovery }: Pro
         </dl>
 
         <button onClick={onRecovery} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-violet-600 p-3 text-sm font-semibold text-white hover:bg-violet-700"><KeyRound size={16} />Código de recuperación</button>
+        {!loading && !error && profile?.isAdmin === true && <button onClick={onAdmin} className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 p-3 text-sm font-semibold text-violet-700 hover:bg-violet-100"><ShieldCheck size={16} />Panel de administrador</button>}
       </Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;

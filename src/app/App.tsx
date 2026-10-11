@@ -16,6 +16,7 @@ import { CollabView } from './components/CollabView';
 import { AuthScreen, AuthSession } from './components/AuthScreen';
 import { RecoveryCodeModal } from './components/RecoveryCodeModal';
 import { ProfileModal, AccountProfile } from './components/ProfileModal';
+import { AdminRecoveryPanel } from './components/AdminRecoveryPanel';
 import { initializeMovieActivity, updateMovieActivity } from './movieActivity';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { MovieDetailModal } from './components/MovieDetailModal';
@@ -176,6 +177,19 @@ export default function App() {
     return data;
   }, [session]);
 
+  const adminRequest = useCallback(async (path: string, body: Record<string, unknown>) => {
+    if (!session) throw new Error('Inicia sesión para acceder al panel.');
+    const send = (token: string) => fetch(`${SERVER}${path}`, { method: 'POST', headers: HEADERS(token), body: JSON.stringify(body), cache: 'no-store' });
+    let response = await send(session.accessToken);
+    if (response.status === 401) {
+      const refreshed = await refreshSession(session);
+      if (refreshed) response = await send(refreshed.accessToken);
+    }
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'No se pudo completar la operación.');
+    return data;
+  }, [session]);
+
   useEffect(() => {
     if (session) loadMovies(session);
   }, [session?.userId]);
@@ -227,6 +241,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    setShowAdmin(false);
     setShowProfile(false);
     setShowRecovery(false);
     localStorage.removeItem(AUTH_SESSION_KEY);
@@ -263,6 +278,7 @@ export default function App() {
   const [showShare, setShowShare] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [detailMovie, setDetailMovie] = useState<Movie | null>(null);
@@ -830,7 +846,8 @@ export default function App() {
       {showRandom && <RandomPicker movies={movies} onClose={() => setShowRandom(false)} onStatusChange={changeStatus} />}
       {showShare && <ShareModal movies={movies} onClose={() => setShowShare(false)} />}
       {showRecovery && <RecoveryCodeModal session={session} onClose={() => setShowRecovery(false)} onRefreshSession={() => refreshSession(session)} />}
-      {showProfile && <ProfileModal username={session.username} loadProfile={loadProfile} onClose={() => setShowProfile(false)} onRecovery={() => { setShowProfile(false); setShowRecovery(true); }} />}
+      {showProfile && <ProfileModal username={session.username} loadProfile={loadProfile} onClose={() => setShowProfile(false)} onRecovery={() => { setShowProfile(false); setShowRecovery(true); }} onAdmin={() => { setShowProfile(false); setShowAdmin(true); }} />}
+      {showAdmin && <AdminRecoveryPanel loadProfile={loadProfile} request={adminRequest} onClose={() => setShowAdmin(false)} />}
       {showCollabModal && (
         <CollabModal movies={movies} onJoinRoom={handleJoinRoom} onClose={() => setShowCollabModal(false)} />
       )}
