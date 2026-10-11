@@ -29,9 +29,9 @@ inicia sesión y genera otro. No se cambia el ID ni las listas del usuario.
 
 ## Cuenta antigua sin código
 
-La excepción temporal para `Nesquikconleche` se retiró al perderse su sesión.
-Para esa cuenta, un administrador puede ejecutar el contenido de
-`scripts/recover-nesquikconleche.sql` en Supabase → SQL Editor después de verificar
+La excepción temporal de recuperación con sesión ya se retiró.
+Para la cuenta `Eli` (`eli@cinetrack.local`), un administrador puede ejecutar el contenido de
+`scripts/recover-eli.sql` en Supabase → SQL Editor después de verificar
 al titular. La consulta devuelve `codigo_recuperacion`, que permite elegir una
 contraseña desde «¿Olvidaste tu contraseña?» sin conocer la anterior. Solo guarda
 el hash del código y no cambia el usuario ni sus listas. Si no devuelve filas,

@@ -6,15 +6,15 @@ WITH secret AS MATERIALIZED (
   SELECT replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '') AS code
 ), saved AS (
   INSERT INTO public.kv_store_da14cc3d (key, value)
-  SELECT 'auth:recovery:nesquikconleche',
+  SELECT 'auth:recovery:eli',
     jsonb_build_object(
       'userId', u.id::text,
       'hash', encode(sha256(convert_to(s.code, 'UTF8')), 'hex')
     )
   FROM auth.users u CROSS JOIN secret s
-  WHERE lower(u.email) = 'nesquikconleche@cinetrack.local'
+  WHERE lower(u.email) = 'eli@cinetrack.local'
   ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
   RETURNING key
 )
-SELECT 'Nesquikconleche' AS usuario, s.code AS codigo_recuperacion
+SELECT 'Eli' AS usuario, s.code AS codigo_recuperacion
 FROM secret s CROSS JOIN saved;
