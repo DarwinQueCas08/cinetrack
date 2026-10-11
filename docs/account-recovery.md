@@ -18,22 +18,6 @@ puede entregar un correo de recuperación ni leer la contraseña existente.
 
 ## Usuario
 
-### Excepción temporal autorizada
-
-Hasta que el propietario pida retirarla, `Nesquikconleche` puede generar el código
-con una sesión válida sin confirmar la contraseña actual. El servidor verifica
-el correo de la cuenta autenticada (`nesquikconleche@cinetrack.local`); no acepta
-un usuario elegido en la petición. Las demás cuentas siguen requiriendo contraseña.
-El frontend renueva una sesión vencida si aún tiene un refresh token válido.
-
-Para retirar la excepción, elimina `TEMPORARY_SESSION_RECOVERY_EMAIL` y
-`allowsSessionRecovery` de `supabase/functions/server/recovery.ts`, y restaura
-la comprobación obligatoria de contraseña en `supabase/functions/server/index.tsx`;
-quita también `allowSessionRecovery` y sus mensajes en `RecoveryCodeModal.tsx`.
-Publica de nuevo el servidor y el frontend. La excepción no caduca automáticamente.
-
-### Flujo habitual
-
 Desde la sesión abierta, pulsa el icono «Proteger cuenta: código de recuperación»
 junto al nombre del usuario. Confirma la contraseña actual y guarda el código
 fuera de CineTrack, por ejemplo en un gestor de contraseñas. Se muestra una vez;
@@ -44,6 +28,18 @@ el código y una contraseña nueva de 8 a 128 caracteres. El código se consume;
 inicia sesión y genera otro. No se cambia el ID ni las listas del usuario.
 
 ## Cuenta antigua sin código
+
+La excepción temporal para `Nesquikconleche` se retiró al perderse su sesión.
+Para esa cuenta, un administrador puede ejecutar el contenido de
+`scripts/recover-nesquikconleche.sql` en Supabase → SQL Editor después de verificar
+al titular. La consulta devuelve `codigo_recuperacion`, que permite elegir una
+contraseña desde «¿Olvidaste tu contraseña?» sin conocer la anterior. Solo guarda
+el hash del código y no cambia el usuario ni sus listas. Si no devuelve filas,
+no existe una cuenta con ese correo en ese proyecto y no se modificó nada.
+Cada ejecución reemplaza el código anterior. No compartas capturas del resultado.
+La función de recuperación y el frontend deben estar desplegados primero.
+La consulta usa funciones integradas de PostgreSQL y genera 244 bits aleatorios
+mediante dos UUID v4; el generador habitual de la aplicación usa 256 bits.
 
 Un administrador debe verificar la identidad del titular por un canal de
 confianza antes de emitir un código. La herramienta se ejecuta localmente con
@@ -75,8 +71,7 @@ códigos, rotación, uso único, entradas inválidas, concurrencia y fallo de Au
 
 Los códigos tienen 256 bits aleatorios, se guardan con SHA-256 y se consumen con
 un único DELETE condicionado por clave y hash en PostgreSQL. El servidor exige
-sesión válida y contraseña actual para emitirlos, salvo la excepción temporal
-documentada para `Nesquikconleche`; el restablecimiento no informa
+sesión válida y contraseña actual para emitirlos; el restablecimiento no informa
 si existe el usuario. No se guardan códigos en localStorage ni en los logs del
 servidor. El nuevo código solo reside en memoria hasta cerrar su ventana.
 
