@@ -18,6 +18,9 @@ puede entregar un correo de recuperación ni leer la contraseña existente.
 
 ## Usuario
 
+Generar un código desde CineTrack exige siempre una sesión válida y la
+contraseña actual. No hay excepciones por usuario ni por dispositivo.
+
 Desde la sesión abierta, pulsa el icono «Proteger cuenta: código de recuperación»
 junto al nombre del usuario. Confirma la contraseña actual y guarda el código
 fuera de CineTrack, por ejemplo en un gestor de contraseñas. Se muestra una vez;
@@ -27,15 +30,23 @@ Para recuperar el acceso, pulsa «¿Olvidaste tu contraseña?» y escribe el usu
 el código y una contraseña nueva de 8 a 128 caracteres. El código se consume;
 inicia sesión y genera otro. No se cambia el ID ni las listas del usuario.
 
-## Cuenta antigua sin código
+## Recuperación controlada por el administrador
 
-La excepción temporal de recuperación con sesión ya se retiró.
-Para la cuenta `Eli` (`eli@cinetrack.local`), un administrador puede ejecutar el contenido de
-`scripts/recover-eli.sql` en Supabase → SQL Editor después de verificar
-al titular. La consulta devuelve `codigo_recuperacion`, que permite elegir una
+Un administrador puede emitir un código para cualquier usuario desde Supabase,
+sin conocer la contraseña anterior y sin requerir una sesión del titular:
+
+1. Verifica la identidad del titular por un canal de confianza.
+2. Abre `scripts/account-recovery.sql` y copia el contenido al SQL Editor.
+3. Cambia `lower(btrim(''))` por `lower(btrim('nombre_usuario'))`; por ejemplo,
+   `lower(btrim('Eli'))`. No pongas el correo completo.
+4. Ejecuta la consulta una vez y entrega `codigo_recuperacion` solo al titular.
+5. El titular usa «¿Olvidaste tu contraseña?» con su usuario, el código y la
+   contraseña nueva. No necesita la contraseña anterior.
+
+La consulta devuelve `codigo_recuperacion`, que permite elegir una
 contraseña desde «¿Olvidaste tu contraseña?» sin conocer la anterior. Solo guarda
 el hash del código y no cambia el usuario ni sus listas. Si no devuelve filas,
-no existe una cuenta con ese correo en ese proyecto y no se modificó nada.
+el usuario quedó vacío o no existe esa cuenta en el proyecto; no se modificó nada.
 Cada ejecución reemplaza el código anterior. No compartas capturas del resultado.
 La función de recuperación y el frontend deben estar desplegados primero.
 La consulta usa funciones integradas de PostgreSQL y genera 244 bits aleatorios
