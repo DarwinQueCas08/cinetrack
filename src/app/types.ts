@@ -22,6 +22,10 @@ export interface Movie {
   rating: number;
   notes: string;
   dateAdded: string;
+  startedWatchingAt?: string;
+  lastWatchedAt?: string;
+  statusChangedAt?: string;
+  watchHistory?: string[];
   tmdbId?: number;
   // Series-only fields
   seasons?: number;

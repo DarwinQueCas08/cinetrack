@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { RefreshCw, Copy, Check, LogOut, Search, Trash2, Users, Crown, Wifi, WifiOff, X, Star, Plus, Key, ExternalLink, Loader2, Film, Tv, Shuffle, Heart } from 'lucide-react';
 import { Movie, MovieStatus, ContentType, TMDBMovie, TMDBSeries, TMDB_GENRES, SERIES_STATUS_MAP } from '../types';
 import { MovieCard } from './MovieCard';
+import { updateMovieActivity } from '../movieActivity';
 import { MovieModal } from './MovieModal';
 import { MovieDetailModal } from './MovieDetailModal';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -247,7 +248,7 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
 
   const handleEditSave = async (data: Omit<Movie, 'id' | 'dateAdded'> & { id?: string; dateAdded?: string }) => {
     if (!room || !data.id) return;
-    const movies = room.movies.map(m => m.id === data.id ? { ...m, ...data } as Movie : m);
+    const movies = room.movies.map(m => m.id === data.id ? updateMovieActivity(m, data) : m);
     try {
       await pushUpdate(movies);
     } catch { setError('Error al guardar cambios.'); }
@@ -282,7 +283,7 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
   const handleStatusChange = async (id: string, status: MovieStatus) => {
     if (!room) return;
     const movie = room.movies.find(m => m.id === id);
-    const movies = room.movies.map(m => m.id === id ? { ...m, status } : m);
+    const movies = room.movies.map(m => m.id === id ? updateMovieActivity(m, { status }) : m);
     try { await pushUpdate(movies, undefined, `marcó ${movie?.title} como ${status}`); } catch { }
   };
 
@@ -706,14 +707,11 @@ export function CollabView({ roomId, ownerKey, memberName, apiKey: initialApiKey
       {/* Detail modal */}
       {detailMovie && (
         <MovieDetailModal
-          movie={detailMovie}
+          movie={room?.movies.find(m => m.id === detailMovie.id) ?? detailMovie}
           onClose={() => setDetailMovie(null)}
           onEdit={m => { setDetailMovie(null); setEditingMovie(m); }}
           onDelete={id => { setDetailMovie(null); handleDeleteMovie(id); }}
-          onStatusChange={(id, status) => {
-            handleStatusChange(id, status);
-            setDetailMovie(prev => prev?.id === id ? { ...prev, status } : prev);
-          }}
+          onStatusChange={handleStatusChange}
           currentUser={memberName}
           onUpdateMovie={handleEditSave}
           readOnly={!isOwner}

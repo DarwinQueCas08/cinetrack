@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { X, Star, MessageCircle, Send, StickyNote, Clock, Eye, CheckCircle2, Edit2, Trash2, Calendar, Tv, Monitor } from 'lucide-react';
 import { Movie, MovieStatus, platformStyle } from '../types';
 import { Avatar } from './Avatar';
+import { MovieDates } from './MovieDates';
+import { recordMovieWatch, formatActivityDate } from '../movieActivity';
 
 const STATUS_CONFIG: Record<MovieStatus, { label: string; textColor: string; bg: string; border: string; icon: React.ReactNode }> = {
   pending:  { label: 'Pendiente',   textColor: '#6D28D9', bg: '#F5F3FF', border: '#DDD6FE', icon: <Clock size={13} /> },
@@ -133,6 +135,11 @@ export function MovieDetailModal({ movie, onClose, onEdit, onDelete, onStatusCha
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+            <MovieDates movie={movie} />
+            {movie.status === 'watched' && !readOnly && onUpdateMovie && <button
+              onClick={() => onUpdateMovie(recordMovieWatch(movie))}
+              className="flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300"
+            ><CheckCircle2 size={16} />La volví a ver hoy</button>}
             
             {/* Rating */}
             <div className="flex items-center justify-between gap-3 bg-gray-50/80 dark:bg-gray-800/80 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50">
@@ -270,7 +277,7 @@ export function MovieDetailModal({ movie, onClose, onEdit, onDelete, onStatusCha
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-xs font-bold text-gray-900 dark:text-gray-200">{comment.user}</span>
                           <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                            {new Date(comment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {formatActivityDate(comment.date)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{comment.text}</p>

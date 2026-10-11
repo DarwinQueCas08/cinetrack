@@ -1,6 +1,7 @@
 import { Star, Clock, Eye, CheckCircle2, Edit2, Trash2, StickyNote, ChevronDown, ChevronUp, Monitor, Film, Tv } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Movie, MovieStatus, platformStyle } from '../types';
+import { MovieDates } from './MovieDates';
 
 const STATUS_CONFIG: Record<MovieStatus, { label: string; textColor: string; bg: string; border: string; icon: React.ReactNode }> = {
   pending: {
@@ -160,6 +161,7 @@ export function MovieCard({ movie, onEdit, onDelete, onStatusChange, onDetail, o
         )}
 
         {/* Bottom actions row */}
+        <MovieDates movie={movie} compact />
         <div className="mt-auto pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
           {/* Stars or Interest */}
           {movie.status === 'pending' && currentUser ? (

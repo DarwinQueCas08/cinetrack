@@ -16,6 +16,7 @@ import { CollabView } from './components/CollabView';
 import { AuthScreen, AuthSession } from './components/AuthScreen';
 import { RecoveryCodeModal } from './components/RecoveryCodeModal';
 import { ProfileModal, AccountProfile } from './components/ProfileModal';
+import { initializeMovieActivity, updateMovieActivity } from './movieActivity';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { MovieDetailModal } from './components/MovieDetailModal';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
@@ -293,9 +294,9 @@ export default function App() {
 
   const addMovie = (data: Omit<Movie, 'id' | 'dateAdded'> & { id?: string; dateAdded?: string }) => {
     if (data.id) {
-      updateMovies(ms => ms.map(m => m.id === data.id ? { ...m, ...data } as Movie : m));
+      updateMovies(ms => ms.map(m => m.id === data.id ? updateMovieActivity(m, data) : m));
     } else {
-      const movie: Movie = { ...data, id: generateId(), dateAdded: new Date().toISOString() } as Movie;
+      const movie = initializeMovieActivity({ ...data, id: generateId(), dateAdded: new Date().toISOString() } as Movie);
       updateMovies(ms => [movie, ...ms]);
     }
     setEditingMovie(null);
@@ -316,7 +317,7 @@ export default function App() {
   };
 
   const changeStatus = (id: string, status: MovieStatus) => {
-    updateMovies(ms => ms.map(m => m.id === id ? { ...m, status } : m));
+    updateMovies(ms => ms.map(m => m.id === id ? updateMovieActivity(m, { status }) : m));
   };
 
   const addMovieDirect = (partial: Partial<Movie>) => {
@@ -846,14 +847,11 @@ export default function App() {
 
       {detailMovie && (
         <MovieDetailModal
-          movie={detailMovie}
+          movie={movies.find(m => m.id === detailMovie.id) ?? detailMovie}
           onClose={() => setDetailMovie(null)}
           onEdit={m => { setDetailMovie(null); setEditingMovie(m); }}
           onDelete={id => { setDetailMovie(null); deleteMovie(id); }}
-          onStatusChange={(id, status) => {
-            changeStatus(id, status);
-            setDetailMovie(prev => prev?.id === id ? { ...prev, status } : prev);
-          }}
+          onStatusChange={changeStatus}
           currentUser={session.username}
           onUpdateMovie={addMovie}
         />
