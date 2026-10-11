@@ -176,12 +176,19 @@ app.post("/make-server-da14cc3d/auth/refresh", async (c) => {
 
 // GET /auth/me
 app.get("/make-server-da14cc3d/auth/me", async (c) => {
+  c.header('Cache-Control', 'no-store');
   try {
     const token = c.req.header("Authorization")?.split(" ")[1];
     if (!token) return c.json({ error: "No autorizado" }, 401);
     const user = await getUserFromToken(token);
     if (!user) return c.json({ error: "Token inválido o expirado" }, 401);
-    return c.json({ userId: user.id, username: user.user_metadata?.username ?? "" });
+    return c.json({
+      userId: user.id,
+      username: user.user_metadata?.username ?? "",
+      email: user.email ?? null,
+      createdAt: user.created_at ?? null,
+      lastSignInAt: user.last_sign_in_at ?? null,
+    });
   } catch (e) {
     return c.json({ error: `Error: ${e}` }, 500);
   }

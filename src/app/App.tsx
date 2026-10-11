@@ -15,6 +15,7 @@ import { CollabModal } from './components/CollabModal';
 import { CollabView } from './components/CollabView';
 import { AuthScreen, AuthSession } from './components/AuthScreen';
 import { RecoveryCodeModal } from './components/RecoveryCodeModal';
+import { ProfileModal, AccountProfile } from './components/ProfileModal';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { MovieDetailModal } from './components/MovieDetailModal';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
@@ -158,6 +159,22 @@ export default function App() {
     } catch { return null; }
   };
 
+  const loadProfile = useCallback(async (): Promise<AccountProfile> => {
+    if (!session) throw new Error('Inicia sesión para consultar tu perfil.');
+    let response = await fetch(`${SERVER}/auth/me`, { headers: HEADERS(session.accessToken), cache: 'no-store' });
+    if (response.status === 401) {
+      const refreshed = await refreshSession(session);
+      if (!refreshed) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión para consultar tus datos.');
+      response = await fetch(`${SERVER}/auth/me`, { headers: HEADERS(refreshed.accessToken), cache: 'no-store' });
+    }
+    if (!response.ok) throw new Error('No se pudieron cargar tus datos. Inténtalo de nuevo.');
+    const data = await response.json();
+    if (data.userId !== session.userId || typeof data.username !== 'string') {
+      throw new Error('No se pudieron verificar los datos de tu cuenta.');
+    }
+    return data;
+  }, [session]);
+
   useEffect(() => {
     if (session) loadMovies(session);
   }, [session?.userId]);
@@ -209,6 +226,8 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    setShowProfile(false);
+    setShowRecovery(false);
     localStorage.removeItem(AUTH_SESSION_KEY);
     localStorage.removeItem(COLLAB_SESSION_KEY);
     setSession(null);
@@ -242,6 +261,7 @@ export default function App() {
   const [showRandom, setShowRandom] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [detailMovie, setDetailMovie] = useState<Movie | null>(null);
@@ -537,12 +557,14 @@ export default function App() {
             {/* User — avatar + name + logout */}
             <button onClick={() => setShowRecovery(true)} className="p-2 rounded-xl text-violet-600 hover:bg-violet-50" title="Proteger cuenta: código de recuperación" aria-label="Proteger cuenta: código de recuperación"><KeyRound size={16} /></button>
             <div className="flex items-center gap-1 ml-1 pl-1 sm:pl-2 border-l border-gray-100">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F5F3FF' }}>
-                <User size={12} style={{ color: '#7C3AED' }} />
-              </div>
-              <span className="hidden sm:block" style={{ fontSize: '11px', fontWeight: 600, color: '#374151', maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {session.username}
-              </span>
+              <button type="button" onClick={() => setShowProfile(true)} aria-label="Ver mi perfil" title="Ver mi perfil" className="flex items-center gap-1.5 rounded-xl p-1.5 hover:bg-violet-50 transition-colors focus-visible:outline-violet-500">
+                <span className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#F5F3FF' }}>
+                  <User size={12} style={{ color: '#7C3AED' }} />
+                </span>
+                <span className="hidden sm:block" style={{ fontSize: '11px', fontWeight: 600, color: '#374151', maxWidth: '64px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {session.username}
+                </span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="p-1.5 rounded-lg hover:bg-red-50 transition-colors"
@@ -807,6 +829,7 @@ export default function App() {
       {showRandom && <RandomPicker movies={movies} onClose={() => setShowRandom(false)} onStatusChange={changeStatus} />}
       {showShare && <ShareModal movies={movies} onClose={() => setShowShare(false)} />}
       {showRecovery && <RecoveryCodeModal session={session} onClose={() => setShowRecovery(false)} />}
+      {showProfile && <ProfileModal username={session.username} loadProfile={loadProfile} onClose={() => setShowProfile(false)} onRecovery={() => { setShowProfile(false); setShowRecovery(true); }} />}
       {showCollabModal && (
         <CollabModal movies={movies} onJoinRoom={handleJoinRoom} onClose={() => setShowCollabModal(false)} />
       )}
