@@ -34,7 +34,14 @@ inicia sesión y genera otro. No se cambia el ID ni las listas del usuario.
 
 ### Panel de CineTrack
 
-El panel se abre desde **Mi perfil → Panel de administrador**. Solo las cuentas
+Las cuentas administradoras entran directamente a una pantalla de administración,
+con recuperación de cuentas como función principal. No se carga su watchlist
+personal ni se muestran las pestañas de películas, búsqueda, estadísticas o salas.
+La navegación permite gestionar recuperaciones, abrir su cuenta y cerrar sesión.
+El cierre de sesión se bloquea mientras se genera un código o hasta confirmar
+que se guardó el código recién emitido. Los usuarios normales conservan su interfaz.
+
+Solo las cuentas
 con `app_metadata.cinetrack_admin: true` pueden verlo y usar sus rutas del servidor.
 El nombre `Admin`, los datos editables de usuario y localStorage no otorgan permisos.
 
@@ -47,8 +54,9 @@ Activación inicial para la cuenta `Admin` elegida por el propietario:
    existe esa cuenta y no cambió nada.
 3. Publica `index.tsx`, `recovery.ts`, `admin-recovery.ts` y `kv_store.tsx` en la
    función `make-server-da14cc3d`, conservando esos nombres. Publica el frontend.
-4. Inicia sesión como `Admin` y abre tu perfil. Si ya estabas dentro, vuelve a
-   abrir el perfil para cargar el permiso actualizado.
+4. Inicia sesión como `Admin`; se abre directamente Administración. Si ya estabas
+   dentro cuando se otorgó el permiso, recarga la página. También puedes abrir
+   **Mi perfil → Panel de administrador** para actualizar la vista.
 
 Para recuperar una cuenta: busca el usuario, verifica sus datos e identidad,
 marca la confirmación e introduce **tu contraseña de administrador**. El titular

@@ -16,7 +16,7 @@ import { CollabView } from './components/CollabView';
 import { AuthScreen, AuthSession } from './components/AuthScreen';
 import { RecoveryCodeModal } from './components/RecoveryCodeModal';
 import { ProfileModal, AccountProfile } from './components/ProfileModal';
-import { AdminRecoveryPanel } from './components/AdminRecoveryPanel';
+import { AdminDashboard } from './components/AdminDashboard';
 import { initializeMovieActivity, updateMovieActivity } from './movieActivity';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { MovieDetailModal } from './components/MovieDetailModal';
@@ -90,6 +90,8 @@ export default function App() {
   });
 
   const { theme, setTheme } = useTheme();
+  const [accountAccess, setAccountAccess] = useState<{ userId: string; isAdmin?: boolean; error?: string } | null>(null);
+  const [accessAttempt, setAccessAttempt] = useState(0);
 
   // Detect shared list (accessible without login)
   const sharedMovies = useMemo(() => {
@@ -191,8 +193,19 @@ export default function App() {
   }, [session]);
 
   useEffect(() => {
-    if (session) loadMovies(session);
-  }, [session?.userId]);
+    if (!session) return;
+    let active = true;
+    loadProfile().then(profile => {
+      if (active) setAccountAccess({ userId: session.userId, isAdmin: profile.isAdmin === true });
+    }).catch(() => {
+      if (active) setAccountAccess({ userId: session.userId, error: 'No se pudo verificar el acceso a tu cuenta.' });
+    });
+    return () => { active = false; };
+  }, [session?.userId, accessAttempt]);
+
+  useEffect(() => {
+    if (session && accountAccess?.userId === session.userId && accountAccess.isAdmin === false) loadMovies(session);
+  }, [session?.userId, accountAccess?.userId, accountAccess?.isAdmin]);
 
   // Debounced save to server on every movies change
   const saveMovies = useCallback((updated: Movie[], sess: AuthSession) => {
@@ -235,13 +248,14 @@ export default function App() {
 
   // --- Auth handlers ---
   const handleAuth = (newSession: AuthSession) => {
+    setAccountAccess(null);
     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(newSession));
     setSession(newSession);
     setMoviesLoaded(false);
   };
 
   const handleLogout = () => {
-    setShowAdmin(false);
+    setAccountAccess(null);
     setShowProfile(false);
     setShowRecovery(false);
     localStorage.removeItem(AUTH_SESSION_KEY);
@@ -278,7 +292,6 @@ export default function App() {
   const [showShare, setShowShare] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
   const [showCollabModal, setShowCollabModal] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [detailMovie, setDetailMovie] = useState<Movie | null>(null);
@@ -496,6 +509,14 @@ export default function App() {
   // --- Auth gate ---
   if (!session) {
     return <AuthScreen onAuth={handleAuth} />;
+  }
+
+  if (accountAccess?.userId !== session.userId || accountAccess.isAdmin === undefined) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#F8F7FF] p-6"><div className="text-center max-w-sm"><Clapperboard className="mx-auto text-violet-600 mb-4" size={32} /><p className="text-sm text-gray-500" role="status">{accountAccess?.error || 'Verificando tu cuenta…'}</p>{accountAccess?.error && <div className="flex gap-4 justify-center mt-4"><button onClick={() => { setAccountAccess(null); setAccessAttempt(value => value + 1); }} className="text-sm text-violet-600 font-semibold">Reintentar</button><button onClick={handleLogout} className="text-sm text-gray-500">Cerrar sesión</button></div>}</div></div>;
+  }
+
+  if (accountAccess.isAdmin) {
+    return <AdminDashboard session={session} loadProfile={loadProfile} request={adminRequest} onRefreshSession={() => refreshSession(session)} onLogout={handleLogout} />;
   }
 
   // --- Loading movies ---
@@ -846,8 +867,7 @@ export default function App() {
       {showRandom && <RandomPicker movies={movies} onClose={() => setShowRandom(false)} onStatusChange={changeStatus} />}
       {showShare && <ShareModal movies={movies} onClose={() => setShowShare(false)} />}
       {showRecovery && <RecoveryCodeModal session={session} onClose={() => setShowRecovery(false)} onRefreshSession={() => refreshSession(session)} />}
-      {showProfile && <ProfileModal username={session.username} loadProfile={loadProfile} onClose={() => setShowProfile(false)} onRecovery={() => { setShowProfile(false); setShowRecovery(true); }} onAdmin={() => { setShowProfile(false); setShowAdmin(true); }} />}
-      {showAdmin && <AdminRecoveryPanel loadProfile={loadProfile} request={adminRequest} onClose={() => setShowAdmin(false)} />}
+      {showProfile && <ProfileModal username={session.username} loadProfile={loadProfile} onClose={() => setShowProfile(false)} onRecovery={() => { setShowProfile(false); setShowRecovery(true); }} onAdmin={() => { setShowProfile(false); setAccessAttempt(value => value + 1); }} />}
       {showCollabModal && (
         <CollabModal movies={movies} onJoinRoom={handleJoinRoom} onClose={() => setShowCollabModal(false)} />
       )}

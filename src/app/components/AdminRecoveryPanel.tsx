@@ -8,9 +8,11 @@ interface Props {
   loadProfile: () => Promise<AccountProfile>;
   request: (path: string, body: Record<string, unknown>) => Promise<any>;
   onClose: () => void;
+  embedded?: boolean;
+  onSafeToLeaveChange?: (safe: boolean) => void;
 }
 
-export function AdminRecoveryPanel({ loadProfile, request, onClose }: Props) {
+export function AdminRecoveryPanel({ loadProfile, request, onClose, embedded = false, onSafeToLeaveChange }: Props) {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [username, setUsername] = useState('');
   const [account, setAccount] = useState<Account | null>(null);
@@ -55,14 +57,12 @@ export function AdminRecoveryPanel({ loadProfile, request, onClose }: Props) {
   };
 
   const canClose = !busy && (!code || saved);
-  return <Dialog.Root open onOpenChange={open => { if (!open && canClose) onClose(); }}>
-    <Dialog.Portal>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
-      <Dialog.Content aria-describedby="admin-description" onEscapeKeyDown={event => { if (!canClose) event.preventDefault(); }} onPointerDownOutside={event => event.preventDefault()} className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto rounded-3xl border border-gray-100 bg-white dark:bg-gray-900 p-6 shadow-xl text-gray-900 dark:text-gray-100" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-        <button onClick={onClose} disabled={!canClose} aria-label="Cerrar panel de administrador" className="absolute right-4 top-4 p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"><X size={18} /></button>
+  useEffect(() => { onSafeToLeaveChange?.(canClose); }, [canClose, onSafeToLeaveChange]);
+  const content = <>
+        {!embedded && <button onClick={onClose} disabled={!canClose} aria-label="Cerrar panel de administrador" className="absolute right-4 top-4 p-2 rounded-xl text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"><X size={18} /></button>}
         <div className="flex gap-3 items-center mb-5 pr-8">
           <div className="rounded-2xl bg-violet-50 dark:bg-violet-950 p-3 text-violet-600"><ShieldCheck size={24} /></div>
-          <div><Dialog.Title className="text-xl font-bold">Administración</Dialog.Title><Dialog.Description id="admin-description" className="text-sm text-gray-500 mt-1">Recuperación de cuentas de CineTrack</Dialog.Description></div>
+          <div>{embedded ? <><h2 className="text-xl font-bold">Recuperar una cuenta</h2><p className="text-sm text-gray-500 mt-1">Busca al usuario y genera su código de acceso.</p></> : <><Dialog.Title className="text-xl font-bold">Administración</Dialog.Title><Dialog.Description id="admin-description" className="text-sm text-gray-500 mt-1">Recuperación de cuentas de CineTrack</Dialog.Description></>}</div>
         </div>
         {authorized === null && <p role="status" className="flex gap-2 text-sm text-gray-500"><Loader2 className="animate-spin" size={16} />Verificando acceso…</p>}
         {error && <p role="alert" className="my-4 rounded-xl bg-red-50 dark:bg-red-950 p-3 text-sm text-red-700 dark:text-red-300">{error}</p>}
@@ -88,7 +88,12 @@ export function AdminRecoveryPanel({ loadProfile, request, onClose }: Props) {
             <button disabled={busy || !confirmed || !password} className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 p-3 text-sm font-semibold text-white disabled:opacity-40">{busy ? <Loader2 size={16} className="animate-spin" /> : <KeyRound size={16} />}{busy ? 'Generando…' : 'Generar código de recuperación'}</button>
           </form> : <p className="rounded-2xl bg-gray-50 dark:bg-gray-800 p-4 text-sm text-gray-500">Busca la cuenta por su nombre de usuario. Podrás confirmar sus datos antes de emitir el código.</p>}
         </div>)}
-      </Dialog.Content>
+  </>;
+  if (embedded) return <section className="rounded-3xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-7 shadow-sm text-gray-900 dark:text-gray-100">{content}</section>;
+  return <Dialog.Root open onOpenChange={open => { if (!open && canClose) onClose(); }}>
+    <Dialog.Portal>
+      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
+      <Dialog.Content aria-describedby="admin-description" onEscapeKeyDown={event => { if (!canClose) event.preventDefault(); }} onPointerDownOutside={event => event.preventDefault()} className="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 max-h-[90vh] overflow-y-auto rounded-3xl border border-gray-100 bg-white dark:bg-gray-900 p-6 shadow-xl text-gray-900 dark:text-gray-100" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>{content}</Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;
 }
